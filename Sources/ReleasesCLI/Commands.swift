@@ -1,7 +1,7 @@
 import Foundation
 
 enum Commands {
-  static let version = "1.1.0"
+  static let version = "1.2.0"
 
   static let json = Option(name: "--json", help: "Print JSON instead of text.")
   static let refresh = Option(name: "--refresh", help: "Fetch the releases from GitHub even if they were fetched recently.")

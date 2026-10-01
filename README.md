@@ -8,7 +8,7 @@ It comes with a `releases` command that does everything the app does, so a codin
 
 ## Download
 
-Get `Releases-1.1.0.zip` from the [latest release](https://github.com/flaviocopes/releases/releases/latest), unzip it, and drag Releases to your Applications folder. It runs on macOS 14 Sonoma or later, on Apple silicon and Intel Macs.
+Get `Releases-1.2.0.zip` from the [latest release](https://github.com/flaviocopes/releases/releases/latest), unzip it, and drag Releases to your Applications folder. It runs on macOS 14 Sonoma or later, on Apple silicon and Intel Macs.
 
 ### Opening it the first time
 
@@ -181,7 +181,7 @@ To build the release zip, run:
 ./Scripts/build-release.sh
 ```
 
-It checks that the app has both architectures and that its signature survives the zip, then writes `dist/Releases-1.1.0.zip`.
+It checks that the app has both architectures and that its signature survives the zip, then writes `dist/Releases-1.2.0.zip`.
 
 ## Development
 
