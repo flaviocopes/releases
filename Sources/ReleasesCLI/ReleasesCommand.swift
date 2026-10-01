@@ -1,0 +1,474 @@
+import Foundation
+import ReleasesCore
+
+@main
+struct ReleasesCommand {
+  /// Releases fetched more recently than this come from the cache.
+  static let cacheAge: TimeInterval = 300
+
+  static func main() async {
+    do {
+      try await run(Array(CommandLine.arguments.dropFirst()))
+    } catch {
+      Output.error(error.localizedDescription)
+      Foundation.exit(1)
+    }
+  }
+
+  private static func run(_ arguments: [String]) async throws {
+    guard let first = arguments.first else {
+      try await run(["list"])
+      return
+    }
+
+    switch first {
+    case "--version", "-v", "version":
+      print("releases \(Commands.version)")
+      return
+    case "--help", "-h":
+      print(Commands.overview())
+      return
+    default:
+      break
+    }
+
+    guard let spec = Commands.spec(for: first) else {
+      throw CLIError.unknownCommand(first)
+    }
+
+    let rest = Array(arguments.dropFirst())
+    if rest.contains("--help") || rest.contains("-h") {
+      print(Commands.help(for: spec))
+      return
+    }
+
+    let parsed = try ParsedArguments.parse(rest, for: spec)
+    let tracker = ReleaseTracker()
+
+    switch spec.name {
+    case "add":
+      try await add(parsed, tracker)
+    case "list":
+      try await list(parsed, tracker)
+    case "recent":
+      try await recent(parsed, tracker)
+    case "show":
+      try await show(parsed, tracker)
+    case "discover":
+      try await discover(parsed, tracker)
+    case "hide":
+      try await hide(parsed, tracker)
+    case "unhide":
+      try await unhide(parsed, tracker)
+    case "prompt":
+      try await prompt(parsed, tracker)
+    case "open":
+      try await open(parsed, tracker)
+    case "refresh":
+      try await refresh(parsed, tracker)
+    case "remove":
+      try await remove(parsed, tracker)
+    case "store-path":
+      if parsed.has("--json") {
+        try Output.json(["path": tracker.store.fileURL.path])
+      } else {
+        print(tracker.store.fileURL.path)
+      }
+    case "help":
+      try help(parsed)
+    default:
+      throw CLIError.unknownCommand(spec.name)
+    }
+  }
+
+  // MARK: - Commands
+
+  private static func add(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    guard !options.positionals.isEmpty else {
+      throw CLIError.missingFolder
+    }
+
+    var added: [ProjectSnapshot] = []
+    var failures = 0
+
+    for folder in options.positionals {
+      let url = URL(filePath: (folder as NSString).expandingTildeInPath, directoryHint: .isDirectory)
+      do {
+        let (snapshot, isNew) = try await tracker.add(url)
+        added.append(snapshot)
+        guard !options.has("--json") else { continue }
+
+        print("\(isNew ? "Added" : "Already tracked:") \(snapshot.name) (\(snapshot.project.path))")
+        print("  GitHub:  \(snapshot.repository?.description ?? "no GitHub remote")")
+        print("  Version: \(snapshot.local.version.map { "\($0.version) (\($0.label))" } ?? "not found")")
+        print("  Status:  \(snapshot.statusText)")
+      } catch {
+        failures += 1
+        Output.error(error.localizedDescription)
+      }
+    }
+
+    if options.has("--json") {
+      try Output.json(added.map { ProjectJSON($0, includeReleases: false) })
+    }
+
+    if failures > 0 {
+      Foundation.exit(1)
+    }
+  }
+
+  private static func list(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    let snapshots = try await tracker.refresh(maxAge: options.has("--refresh") ? nil : cacheAge)
+
+    if options.has("--json") {
+      try Output.json(snapshots.map { ProjectJSON($0, includeReleases: false) })
+      return
+    }
+
+    Output.table(snapshots)
+    reportFetchErrors(snapshots)
+    if !snapshots.isEmpty {
+      Output.hint("Run 'releases show <project>' to see every release.")
+    }
+  }
+
+  private static func recent(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    let snapshots = try await tracker.refresh(maxAge: options.has("--refresh") ? nil : cacheAge)
+    let timeline = snapshots.timeline()
+    let entries = Array(timeline.prefix(try options.int("--limit") ?? 20))
+
+    if options.has("--json") {
+      try Output.json(entries.map(TimelineJSON.init))
+      return
+    }
+
+    guard !entries.isEmpty else {
+      print(snapshots.isEmpty ? "No projects yet. Add one with 'releases add <folder>'." : "No releases on GitHub yet.")
+      return
+    }
+
+    Output.columns(entries.map { entry in
+      [
+        entry.date.formatted(date: .abbreviated, time: .shortened),
+        entry.project.name,
+        entry.release.tag + (entry.release.isPrerelease ? " [prerelease]" : ""),
+        entry.release.downloadCount == 1 ? "1 download" : "\(entry.release.downloadCount) downloads"
+      ]
+    })
+    reportFetchErrors(snapshots)
+    if entries.count < timeline.count {
+      Output.hint("Showing \(entries.count) of \(timeline.count) releases. Use --limit to see more.")
+    }
+  }
+
+  private static func show(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    let (snapshot, isTracked) = try await resolve(
+      identifier(options, command: "show"),
+      maxAge: options.has("--refresh") ? nil : cacheAge,
+      tracker
+    )
+
+    if options.has("--json") {
+      try Output.json(ProjectJSON(snapshot, includeReleases: true, isTracked: isTracked))
+      return
+    }
+
+    Output.details(snapshot, isTracked: isTracked)
+    if isTracked {
+      reportFetchErrors([snapshot])
+    }
+  }
+
+  private static func discover(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    if options.has("--hidden") {
+      let hidden = try await tracker.hiddenPaths()
+      if options.has("--json") {
+        try Output.json(hidden)
+      } else if hidden.isEmpty {
+        print("Nothing is hidden.")
+      } else {
+        hidden.forEach { print($0) }
+        Output.hint("Show one again with 'releases unhide <folder>'.")
+      }
+      return
+    }
+
+    let found = try await tracker.discover(fetchReleases: !options.has("--offline"))
+
+    if options.has("--json") {
+      try Output.json(found.map(FoundJSON.init))
+      return
+    }
+
+    guard !found.isEmpty else {
+      print("Every app and CLI on this Mac is in the list or hidden.")
+      return
+    }
+    Output.found(found)
+    Output.hint("Add one with 'releases add <folder>', or hide it with 'releases hide <folder>'.")
+  }
+
+  private static func hide(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    guard !options.positionals.isEmpty else {
+      throw CLIError.missingProject(command: "hide")
+    }
+
+    var hidden: [NameJSON] = []
+    var failures = 0
+    for identifier in options.positionals {
+      do {
+        let (snapshot, isTracked) = try await tracker.lookup(identifier, fetchReleases: false)
+        guard !isTracked else { throw CLIError.alreadyTracked(name: snapshot.name) }
+        try await tracker.hide(snapshot.project.path)
+        hidden.append(NameJSON(name: snapshot.name, path: snapshot.project.path))
+        if !options.has("--json") {
+          print("Hid \(snapshot.name) (\(snapshot.project.path)).")
+        }
+      } catch {
+        failures += 1
+        Output.error(error.localizedDescription)
+      }
+    }
+
+    if options.has("--json") {
+      try Output.json(hidden)
+    }
+    if failures > 0 {
+      Foundation.exit(1)
+    }
+  }
+
+  private static func unhide(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    guard !options.positionals.isEmpty else {
+      throw CLIError.missingProject(command: "unhide")
+    }
+
+    var shown: [String] = []
+    var failures = 0
+    for identifier in options.positionals {
+      do {
+        let path = try await tracker.unhide(identifier)
+        shown.append(path)
+        if !options.has("--json") {
+          print("\(path) shows up in 'releases discover' again.")
+        }
+      } catch {
+        failures += 1
+        Output.error(error.localizedDescription)
+      }
+    }
+
+    if options.has("--json") {
+      try Output.json(shown)
+    }
+    if failures > 0 {
+      Foundation.exit(1)
+    }
+  }
+
+  private static func prompt(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    let (snapshot, isTracked) = try await resolve(identifier(options, command: "prompt"), maxAge: cacheAge, tracker)
+    let version = try requestedVersion(options, for: snapshot) ?? snapshot.suggestedVersion
+    let text = ReleasePrompt.make(for: snapshot, version: version, notes: options.value("--notes") ?? "")
+
+    if options.has("--cursor") {
+      if !isTracked {
+        _ = try await tracker.add(snapshot.project.url)
+      }
+      try await Cursor.start(prompt: text, in: snapshot.project.url)
+    }
+
+    if options.has("--json") {
+      try Output.json(PromptJSON(
+        project: snapshot.name,
+        path: snapshot.project.path,
+        version: version.description,
+        tag: version.tag,
+        prompt: text,
+        openedInCursor: options.has("--cursor")
+      ))
+    } else if options.has("--cursor") {
+      print("Opened \(snapshot.name) in Cursor. Review the prompt in the chat and send it.")
+    } else {
+      print(text)
+    }
+  }
+
+  private static func open(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    let targets = ["--github", "--cursor", "--finder", "--release"].filter(options.has)
+    let wantsRelease = options.has("--release") || options.value("--version") != nil
+      || options.value("--bump") != nil || options.value("--notes") != nil
+    if targets.count > 1 {
+      throw CLIError.conflictingOptions(targets[0], targets[1])
+    }
+    if let target = targets.first, target != "--release", wantsRelease {
+      throw CLIError.conflictingOptions(target, "--release")
+    }
+
+    guard let identifier = options.positionals.first else {
+      guard targets.isEmpty, !wantsRelease else { throw CLIError.missingProject(command: "open") }
+      try AppLink.home.open()
+      try report(options, OpenJSON(opened: "app", project: nil, path: nil, url: AppLink.home.url), "Opened Releases.")
+      return
+    }
+
+    let (snapshot, _) = try await tracker.lookup(identifier, fetchReleases: false)
+    let path = snapshot.project.path
+
+    switch targets.first {
+    case "--github":
+      guard let repository = snapshot.repository else { throw CLIError.notOnGitHub(name: snapshot.name) }
+      try openURL(repository.url)
+      try report(options, OpenJSON(opened: "github", project: snapshot.name, path: path, url: repository.url), "Opened \(repository.url.absoluteString).")
+    case "--cursor":
+      try Cursor.open(snapshot.project.url)
+      try report(options, OpenJSON(opened: "cursor", project: snapshot.name, path: path, url: nil), "Opened \(snapshot.name) in Cursor.")
+    case "--finder":
+      try openURL(nil, arguments: ["-R", path])
+      try report(options, OpenJSON(opened: "finder", project: snapshot.name, path: path, url: nil), "Showed \(snapshot.name) in the Finder.")
+    default:
+      let link: AppLink
+      if wantsRelease {
+        let fresh = try await resolve(path, maxAge: cacheAge, tracker).snapshot
+        link = .release(path: path, version: try requestedVersion(options, for: fresh), notes: options.value("--notes"))
+      } else {
+        link = .project(path: path)
+      }
+      try link.open()
+      let message = wantsRelease
+        ? "Opened the Create Release sheet for \(snapshot.name) in the app. It's waiting for a human to review it."
+        : "Showed \(snapshot.name) in the app."
+      try report(options, OpenJSON(opened: wantsRelease ? "release" : "app", project: snapshot.name, path: path, url: link.url), message)
+    }
+  }
+
+  private static func refresh(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    let snapshots = try await tracker.refresh(maxAge: nil)
+    if AppLink.isAppRunning {
+      try? AppLink.refresh.open(inBackground: true)
+    }
+
+    if options.has("--json") {
+      try Output.json(snapshots.map { ProjectJSON($0, includeReleases: false) })
+      return
+    }
+    Output.table(snapshots)
+    reportFetchErrors(snapshots)
+  }
+
+  private static func remove(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    guard !options.positionals.isEmpty else {
+      throw CLIError.missingProject(command: "remove")
+    }
+
+    let snapshots = try await tracker.snapshots()
+    var removed: [NameJSON] = []
+    var failures = 0
+
+    for identifier in options.positionals {
+      do {
+        let snapshot = try snapshots.project(matching: identifier)
+        try await tracker.remove(snapshot.project.path)
+        removed.append(NameJSON(name: snapshot.name, path: snapshot.project.path))
+        if !options.has("--json") {
+          print("Removed \(snapshot.name).")
+        }
+      } catch {
+        failures += 1
+        Output.error(error.localizedDescription)
+      }
+    }
+
+    if options.has("--json") {
+      try Output.json(removed)
+    }
+    if failures > 0 {
+      Foundation.exit(1)
+    }
+  }
+
+  private static func help(_ options: ParsedArguments) throws {
+    if let name = options.positionals.first {
+      guard let target = Commands.spec(for: name) else {
+        throw CLIError.unknownCommand(name)
+      }
+      if options.has("--json") {
+        try Output.json(target)
+      } else {
+        print(Commands.help(for: target))
+      }
+    } else if options.has("--json") {
+      try Output.json(HelpJSON(version: Commands.version, commands: Commands.all))
+    } else {
+      print(Commands.overview())
+    }
+  }
+
+  // MARK: - Helpers
+
+  private static func identifier(_ options: ParsedArguments, command: String) throws -> String {
+    guard let value = options.positionals.first else {
+      throw CLIError.missingProject(command: command)
+    }
+    return value
+  }
+
+  /// A tracked project with releases no older than `maxAge`, or a folder on disk with the releases GitHub has now.
+  private static func resolve(_ identifier: String, maxAge: TimeInterval?, _ tracker: ReleaseTracker) async throws -> (snapshot: ProjectSnapshot, isTracked: Bool) {
+    let (match, isTracked) = try await tracker.lookup(identifier, fetchReleases: false)
+    guard isTracked else {
+      return (await tracker.found(at: match.project.url).snapshot, false)
+    }
+    let snapshot = try await tracker
+      .refresh(maxAge: maxAge, only: [match.id])
+      .project(matching: match.project.path)
+    return (snapshot, true)
+  }
+
+  /// The version from --version or --bump. Nil when neither is there.
+  private static func requestedVersion(_ options: ParsedArguments, for snapshot: ProjectSnapshot) throws -> SemanticVersion? {
+    switch (options.value("--version"), options.value("--bump")) {
+    case (let raw?, nil):
+      guard let parsed = SemanticVersion(raw) else {
+        throw CLIError.invalidValue(option: "--version", value: raw)
+      }
+      return parsed
+    case (nil, let raw?):
+      guard let bump = SemanticVersion.Bump(rawValue: raw.lowercased()) else {
+        throw CLIError.invalidValue(option: "--bump", value: raw)
+      }
+      return snapshot.bumpBase.bumped(bump)
+    case (nil, nil):
+      return nil
+    case (_?, _?):
+      throw CLIError.conflictingOptions("--version", "--bump")
+    }
+  }
+
+  private static func openURL(_ url: URL?, arguments: [String] = []) throws {
+    let result = Process()
+    result.executableURL = URL(filePath: "/usr/bin/open")
+    result.arguments = arguments + (url.map { [$0.absoluteString] } ?? [])
+    try result.run()
+    result.waitUntilExit()
+    guard result.terminationStatus == 0 else {
+      throw CLIError.couldNotOpen
+    }
+  }
+
+  private static func report(_ options: ParsedArguments, _ value: OpenJSON, _ message: String) throws {
+    if options.has("--json") {
+      try Output.json(value)
+    } else {
+      print(message)
+    }
+  }
+
+  private static func reportFetchErrors(_ snapshots: [ProjectSnapshot]) {
+    for snapshot in snapshots where snapshot.project.releases != nil {
+      if let error = snapshot.project.fetchError {
+        Output.note("\(snapshot.name): \(error) Showing the releases fetched earlier.")
+      }
+    }
+  }
+}

@@ -1,0 +1,217 @@
+<img src="docs/banner.png" alt="Releases, every release of your Mac apps, and the ones you haven't shipped" />
+
+Releases is a Mac app that keeps track of the apps you make: their versions, their GitHub releases, and the ones you haven't released yet. Open it and you see every release of every project, newest first, with what changed and how many people downloaded it.
+
+GitHub shows one repo at a time. When you build a lot of small apps, it's easy to lose track of which ones have changes waiting, and which ones never left your Mac. Releases puts all of it in one window, and its **On This Mac** list shows the apps in your projects folder you haven't added or released yet.
+
+It comes with a `releases` command that does everything the app does, so a coding agent can do it too.
+
+## Download
+
+Get `Releases-1.0.0.zip` from the [latest release](https://github.com/flaviocopes/releases/releases/latest), unzip it, and drag Releases to your Applications folder. It runs on macOS 14 Sonoma or later, on Apple silicon and Intel Macs.
+
+### Opening it the first time
+
+Releases isn't signed with an Apple Developer ID or notarized by Apple. So the first time you open it, macOS says it "could not verify Releases is free of malware". Click **Done**, then allow it in one of two ways.
+
+In System Settings, open **Privacy & Security** and scroll down to the message about Releases. Click **Open Anyway**, confirm, and open the app again. The button shows up for about an hour after you try to open the app.
+
+In Terminal, remove the quarantine flag macOS adds to downloaded files, then open the app:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Releases.app
+```
+
+The same command fixes a message saying Releases is damaged. You don't need to turn off Gatekeeper for either option.
+
+On a work laptop you might not be able to install apps in `/Applications`. You can keep Releases in the `Applications` folder inside your home folder, and run the command on `~/Applications/Releases.app`. If your company blocks apps that aren't notarized, ask your IT team.
+
+### Updates
+
+Once a day, Releases asks GitHub whether there's a newer version. When there is, it shows what's new, and **Install and Relaunch** puts it in place of the old one. **Releases → Check for Updates…** checks right away.
+
+To turn off the daily check, run this in Terminal:
+
+```sh
+defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
+```
+
+## Features
+
+- **Latest Releases** puts every release of every project in one timeline, grouped by day, with its downloads and what changed
+- What changed comes from the project's `CHANGELOG.md`, or from the "What's new" part of the release notes on GitHub
+- **Waiting to ship** lists the projects with commits since their last release, or with a version newer than the last release
+- **On This Mac** lists the apps and command-line tools in your projects folder that aren't in the list yet, with the ones you worked on last at the top
+- Each project shows its version and the file it comes from, its branch, the commits you haven't pushed or released, and every release with its downloads
+- **Create Release** suggests the next version, writes the prompt for your coding agent, and opens it in Cursor. Nothing runs until you send it
+- Add a project by dropping its folder on the window, with `⌘O`, or with `releases add`
+- The name and the icon come from the app you built, in `dist/` or `build/`
+- The releases refresh every 10 minutes and when you switch to the app, and `⌘R` refreshes them right away
+- A `releases` command for your terminal and your agents, with JSON output
+- Updates from inside the app
+- Light and dark appearance following the macOS setting
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png" />
+  <img src="docs/screenshot-light.png" alt="The Releases window on Latest Releases, with the On This Mac list in the sidebar and two projects waiting to ship" />
+</picture>
+
+## On This Mac
+
+The sidebar has a list of the software in your projects folder that isn't in Releases yet. Each one says whether it's on GitHub, whether it has a release, and when you last worked on it.
+
+Releases looks right inside the folders that hold your projects. If you track `~/dev/inkwell`, it looks in `~/dev`. With nothing added yet, it looks in `~/dev`, `~/Developer`, `~/Projects` and `~/code`. It never looks in your home folder itself, since reading Desktop or Documents makes macOS ask for permission.
+
+A folder shows up when it has one of these:
+
+- an Xcode project, or a `project.yml` for XcodeGen
+- a `Package.swift` with an executable
+- a `package.json` with a `bin` command, or an Electron or Tauri dependency
+- a built `.app` in `dist/` or `build/`
+
+Clones of other people's repos stay out of the list. Releases knows your GitHub account from the projects you added, so a repo from another account doesn't show up. Neither does a second copy of a project you already track.
+
+Click one to see its page, then **Add to List**, or **Hide** if you won't ship it. You can also right-click it, or hover it and click the plus button. To bring back a hidden folder, run `releases unhide <folder>`.
+
+## A project's page
+
+Select a project to see where it stands. The badge says whether it's up to date, how many commits came after the last release, or that the version in the project is ready to release.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-project-dark.png" />
+  <img src="docs/screenshot-project-light.png" alt="The page of the Inkwell project, with its version, branch, downloads and four releases" />
+</picture>
+
+Releases reads the version from the first of these it finds:
+
+1. `MARKETING_VERSION` in `project.yml`
+2. `version` in `package.json`
+3. a constant like `static let version = "1.0.0"` in `Sources/`
+4. `MARKETING_VERSION` in the Xcode project
+
+## Creating a release
+
+Click **Create Release…** on a project, or next to it in **Waiting to ship**. Pick the version, or bump the latest release with the **Patch**, **Minor** and **Major** buttons, and add anything else the agent should know.
+
+**Continue in Cursor** opens the project in Cursor and puts the prompt in the chat. Cursor never runs it on its own, so you can read it and send it when you're ready. **Copy Prompt** copies it for any other agent.
+
+The prompt has the project, its GitHub repo, the version, and the commits since the last release. It asks the agent to use a skill called `open-source-release` when it has one. That's the skill I use to publish my apps, and you can write your own with that name. Without it, the prompt lists the steps: set the version, tag it, build the app, and publish the GitHub release.
+
+It works for projects that aren't on GitHub yet, too. The prompt then asks the agent to create the repo first. A project from **On This Mac** gets added to your list when you continue.
+
+## The command line tool
+
+The `releases` command reads the same list as the app, and the app picks up every change right away. Build it from source and link it into `~/.local/bin`:
+
+```sh
+./Scripts/install-cli.sh
+```
+
+Pass another folder to install it somewhere else, like `./Scripts/install-cli.sh /opt/homebrew/bin`.
+
+| Command | What it does |
+| --- | --- |
+| `releases add <folder>` | Adds projects to the list |
+| `releases list` | Every project with its version, latest release and status |
+| `releases recent` | The latest releases across all projects |
+| `releases show <project>` | A project and all its releases |
+| `releases discover` | The apps on this Mac that aren't in the list, like On This Mac |
+| `releases hide <project>` | Leaves a project out of On This Mac |
+| `releases unhide <folder>` | Brings a hidden project back |
+| `releases prompt <project>` | Prints the release prompt, or opens it in Cursor with `--cursor` |
+| `releases open <project>` | Shows a project in the app, or on GitHub, in Cursor or in the Finder |
+| `releases refresh` | Fetches every release from GitHub now |
+| `releases remove <project>` | Takes projects off the list, and leaves their folders alone |
+
+A project is its folder path, its folder name, its app name, or its GitHub repo. `show` and `prompt` also take a folder that isn't in the list.
+
+```sh
+releases show inkwell
+releases prompt inkwell --bump minor --cursor
+releases discover --offline
+```
+
+Run `releases help <command>` for the options of each command.
+
+## For agents
+
+Every command takes `--json`. `releases help --json` lists every command and its options, so an agent can learn the tool in one call. Errors go to stderr with exit code 1.
+
+`releases open` drives the app's window. An agent can show you a project, or open the Create Release sheet with the version and the notes filled in:
+
+```sh
+releases open inkwell --release --bump minor --notes "Mention the new Tags feature first"
+```
+
+The sheet waits for you. Nothing gets released until you click **Continue in Cursor** and send the prompt.
+
+`releases open` works through the app's `releases://` links, so open the app once first, which tells macOS about them. The links are `releases://home`, `releases://project?path=…`, `releases://release?path=…&version=…&notes=…` and `releases://refresh`.
+
+## GitHub access
+
+Releases asks the GitHub API for the releases of your projects. It signs the requests with the token in `GH_TOKEN` or `GITHUB_TOKEN`, or the one of the [GitHub CLI](https://cli.github.com) when you're logged in with `gh auth login`. With a token, private repos work too.
+
+Without a token it still works, for public repos only. GitHub allows 60 requests an hour that way, which is plenty for a handful of projects.
+
+The token stays in memory. Releases never saves it or prints it.
+
+## Privacy
+
+Releases reads your project folders and their git history on your Mac, and has no accounts or analytics.
+
+It goes online to ask GitHub for the releases of your projects, every 10 minutes while it's open. For **On This Mac**, it also asks about the projects in that list that are on GitHub, at most once an hour or when you press `⌘R`. Once a day, it asks GitHub whether there's a newer version of Releases, and it downloads one only when you click **Install and Relaunch**.
+
+The list lives in `~/Library/Application Support/Releases/projects.json`, with the folders you added, the releases last fetched from GitHub, and the folders you hid. `releases store-path` prints where it is. Set `RELEASES_STORE` to use another file.
+
+## Build it from source
+
+You need macOS 14 or later, and Xcode 26 or a Swift 6.2 toolchain.
+
+Build the app and open it:
+
+```sh
+./Scripts/build-app.sh
+open dist/Releases.app
+```
+
+It builds a universal app in `dist/Releases.app`, ad-hoc signed, and registers its `releases://` links. A copy you build yourself opens without a warning. You can also run the development build with `swift run ReleasesApp`.
+
+To build the release zip, run:
+
+```sh
+./Scripts/build-release.sh
+```
+
+It checks that the app has both architectures and that its signature survives the zip, then writes `dist/Releases-1.0.0.zip`.
+
+## Development
+
+It's a Swift package with three targets and no dependencies. `ReleasesCore` has all the logic, and the app and the command are thin layers on top of it.
+
+```sh
+swift test                         # run the tests
+swift run releases list            # run the command from source
+swift Scripts/render-icon.swift    # draw the app icon into Assets/AppIcon.png
+./Scripts/screenshot.sh            # render the screenshots in docs/
+swift Scripts/render-banner.swift  # render the banner from the icon and the dark screenshot
+```
+
+The screenshots come from the real app views, with made-up projects. The capture app has its own bundle ID and an empty list, so it never touches yours.
+
+To try a change without touching your list, point `RELEASES_STORE` at another file:
+
+```sh
+RELEASES_STORE=/tmp/releases-test/projects.json swift run releases list
+```
+
+Working with an AI coding agent? Point it at [AGENTS.md](AGENTS.md). It has the commands and the rules to follow.
+
+## How it works
+
+The list only keeps the folders, plus the releases GitHub returned last time. Everything else comes from the folder each time Releases looks: the name and icon of the built app, the version, the GitHub repo from the `origin` remote, the branch, and the commits since the last release's tag. So a version bump or a new commit shows up as soon as you switch to the app.
+
+The app and the command share that file, and the app watches its folder. So a project an agent adds with `releases add` shows up in the window right away, while the `releases://` links go the other way, from the command to the window.
+
+## License
+
+Releases is released under the [MIT license](LICENSE). It's provided as is, without warranty of any kind.

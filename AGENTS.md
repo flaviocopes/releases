@@ -1,0 +1,51 @@
+# Releases
+
+A Mac app and a CLI that track the versions and GitHub releases of your Mac apps and tools. A Swift package with three targets, no Xcode project, no external dependencies.
+
+- `Sources/ReleasesCore`: all the logic. `ProjectInspector` reads a folder (name, GitHub remote, version file, built app, git state), `GitHubClient` fetches the releases, `ProjectStore` keeps the list, `ReleaseTracker` ties them together, `ProjectSnapshot` works out the status, `ReleasePrompt` writes the prompt and opens Cursor. `ProjectFinder` finds the apps and CLIs on disk that aren't in the list, and `AppLink` builds and reads the app's `releases://` links.
+- `Sources/ReleasesCLI`: the `releases` command, for people and for agents. `Commands.swift` declares every command and its options (the help text and `releases help --json` come from there), `Arguments.swift` parses them, `Output.swift` renders tables and JSON, `ReleasesCommand.swift` dispatches.
+- `Sources/ReleasesApp`: the SwiftUI app. `AppModel` holds the state, watches the list file, so changes from the CLI show up right away, and handles `releases://` links. `ProjectListView` is the sidebar: Latest Releases, On This Mac (`releases discover`), then the projects. `HomeView` is the Latest Releases page, the timeline of every project's releases (`releases recent` in the CLI). `ProjectDetailView` shows one project, in the list or found on disk.
+- `Tests/ReleasesCoreTests`: Swift Testing tests for the core.
+
+## Build and test
+
+Requirements: macOS 14+, Swift 6.2 (Xcode 26).
+
+```bash
+swift build                        # build every target (debug)
+swift test                         # run the tests, must pass before committing
+swift run releases list            # run the CLI from source
+swift run ReleasesApp              # run the app from source
+./Scripts/build-app.sh             # universal release build, produces dist/Releases.app (ad-hoc signed)
+./Scripts/build-release.sh         # the app zipped for a GitHub release, dist/Releases-<version>.zip
+./Scripts/install-cli.sh           # release build of releases, symlinked into ~/.local/bin
+./Scripts/screenshot.sh            # docs/screenshot-*.png from the real views, with made-up projects
+swift Scripts/render-banner.swift  # docs/banner.png from the icon and docs/screenshot-dark.png
+```
+
+Set `RELEASES_STORE=/tmp/releases-test/projects.json` to try things without touching the real list.
+
+## How it works
+
+- The list lives in `~/Library/Application Support/Releases/projects.json`: the folder paths, the releases last fetched from GitHub, and the folders hidden from On This Mac (`hiddenPaths`). Everything else is read from the folder each time.
+- On This Mac, and `releases discover`, look right inside the folders that hold the tracked projects, like `~/dev`. They never look in the home folder itself, because reading Desktop or Documents makes macOS ask for permission. With an empty list they look in `~/dev`, `~/Developer`, `~/Projects` and `~/code`. A folder counts when it has a `project.yml` with targets, an `.xcodeproj`, a `Package.swift` with an executable, a `package.json` with `bin` or an Electron or Tauri dependency, or a built `.app`. Clones of other people's repos (an owner none of the tracked projects has) and second copies of tracked repos are left out. The most recently worked on come first, by newest commit or file. The app looks at most once an hour, and on ⌘R. Add new layouts to `ProjectFinder.isSoftware(_:)` with a test.
+- The GitHub repo comes from the `origin` remote. Requests use `GH_TOKEN`, `GITHUB_TOKEN` or `gh auth token`, and fall back to unauthenticated ones (public repos only, 60 an hour).
+- The CLI refetches releases older than 5 minutes, the app every 10 minutes and when it comes to the front. `--refresh` and ⌘R fetch right away.
+- The version is read from, in order: `MARKETING_VERSION` in `project.yml`, `version` in `package.json`, a constant like `static let version = "1.0.0"` in `Sources/` (`Version.swift` and `Commands.swift` first), `MARKETING_VERSION` in the `.xcodeproj`. Add new layouts to `ProjectInspector.version(in:)` with a test.
+- The name and icon come from a built `.app` in `dist/` or `build/` when there is one.
+- A release's changes (`ReleaseNotes.swift`) come from its section of the project's `CHANGELOG.md` when there is one, with a heading like `## 2.0.0 (September 30, 2026)` or `## [1.2.0] - 2026-09-30`. Otherwise they're the bullets under headings like "What's new" or "What's in 1.0" in the GitHub notes. Install steps, intros and checksums are left out. A bullet that starts with a bold phrase uses it as its headline.
+- Create Release opens the folder in Cursor, waits 1.5 seconds, then opens `cursor://anysphere.cursor-deeplink/prompt?text=…`. The deeplink can't pick a window, and Cursor never runs it without the user sending it. The prompt points the agent to an `open-source-release` skill when it has one, and lists the steps for when it doesn't. It works for projects that aren't on GitHub yet too, and the prompt asks the agent to create the repo. A project that isn't in the list gets added when you continue.
+- The app answers `releases://home`, `releases://project?path=…`, `releases://release?path=…&version=…&notes=…` and `releases://refresh`. `releases open` sends them, and `Scripts/build-app.sh` registers the scheme with `lsregister`. A release link only opens the Create Release sheet: a human reviews it and continues.
+
+## Working on the code
+
+- Add logic to `ReleasesCore` and cover it with a test. Keep the CLI and the app thin.
+- Everything a person can do in the app has a CLI command, so agents can do it too. Add new actions to both, give the command `--json`, and declare it in `Commands.all`.
+- New fields on `TrackedProject`, `Release` and `ProjectList` must be optional, so old `projects.json` files still decode.
+- The version lives in `Commands.version` in `Sources/ReleasesCLI/Commands.swift`. The CLI prints it, and `Scripts/build-app.sh` writes it into the app's `Info.plist`.
+- `Sources/ReleasesApp/AppUpdater.swift` checks the GitHub releases of `flaviocopes/releases` once a day and installs updates. It's an identical copy of the template in the `mac-app-updater` skill, so change the template and copy it over instead of editing it here. Every release needs its `vX.Y.Z` tag, the zip from `Scripts/build-release.sh` attached, and a `Commands.version` that matches the tag, or the app refuses the update. Put what's new first in the release notes: the update dialog shows them up to `## Install`.
+- The app has no automated UI tests. Check visual changes by running `./Scripts/build-app.sh` and opening the app. `releases open <project>` jumps straight to a page. For the README, refresh the screenshots with `./Scripts/screenshot.sh` and the banner after them.
+- Screenshots and demos use made-up projects. `Scripts/screenshot.swift` points `RELEASES_STORE` at an empty file and fills the model in code, so it never shows a real project list or the folders on the Mac it runs on.
+- The icon is drawn by `Scripts/render-icon.swift` into `Assets/AppIcon.png`, and `Scripts/build-app.sh` turns it into `AppIcon.icns`. Change a constant and run `swift Scripts/render-icon.swift` instead of editing the PNG.
+- Apps are ad-hoc signed and not notarized. Sign deep, zip with `ditto -c -k --keepParent`, and check the signature again after unzipping, as `Scripts/build-release.sh` does.
+- Never write tokens to the list file or print them.
