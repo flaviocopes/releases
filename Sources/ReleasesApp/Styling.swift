@@ -111,7 +111,7 @@ struct Tag: View {
 
 extension Color {
   /// Marks a project's first release, the one that launched it.
-  static let firstRelease = Color.pink
+  static let firstRelease = Color.green
 }
 
 struct FirstReleaseTag: View {
