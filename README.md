@@ -6,6 +6,10 @@ GitHub shows one repo at a time. When you build a lot of small apps, it's easy t
 
 It comes with a `releases` command that does everything the app does, so a coding agent can do it too.
 
+Read the announcement and watch the 30-second demo on my blog: [I built Releases, a Mac app that tracks every app I release](https://flaviocopes.com/releases/).
+
+[![Watch the 30-second Releases demo](docs/showreel-poster.jpg)](https://flaviocopes.com/releases/)
+
 ## Download
 
 Get `Releases-1.3.0.zip` from the [latest release](https://github.com/flaviocopes/releases/releases/latest), unzip it, and drag Releases to your Applications folder. It runs on macOS 14 Sonoma or later, on Apple silicon and Intel Macs.
