@@ -224,6 +224,8 @@ struct TimelineJSON: Encodable {
 /// The JSON shape of a project, flat enough for agents and scripts.
 struct ProjectJSON: Encodable {
   var name: String
+  /// The name read from the folder, when the project has another name in Releases.
+  var detectedName: String?
   var path: String
   var isTracked: Bool
   var repository: String?
@@ -241,6 +243,7 @@ struct ProjectJSON: Encodable {
 
   init(_ snapshot: ProjectSnapshot, includeReleases: Bool, isTracked: Bool = true) {
     name = snapshot.name
+    detectedName = snapshot.project.displayName == nil ? nil : snapshot.local.name
     path = snapshot.project.path
     self.isTracked = isTracked
     repository = snapshot.repository?.description
@@ -285,6 +288,12 @@ struct FoundJSON: Encodable {
     isGitRepository = project.snapshot.local.isGitRepository
     hasUncommittedChanges = project.snapshot.local.hasUncommittedChanges
   }
+}
+
+struct RenameJSON: Encodable {
+  var name: String
+  var detectedName: String
+  var path: String
 }
 
 struct NameJSON: Encodable {

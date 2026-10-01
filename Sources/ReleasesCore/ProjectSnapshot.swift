@@ -31,7 +31,14 @@ public struct ProjectSnapshot: Identifiable, Hashable, Sendable {
   }
 
   public var id: String { project.id }
-  public var name: String { local.name }
+  /// The name given in Releases, or the one read from the folder.
+  public var name: String { project.displayName ?? local.name }
+
+  /// The name to store for what someone typed: nil when it's empty or the folder's own name.
+  public func displayName(for input: String) -> String? {
+    let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty || trimmed == local.name ? nil : trimmed
+  }
   public var repository: GitHubRepository? { local.repository }
   public var releases: [Release] { project.releases ?? [] }
 
@@ -189,6 +196,7 @@ extension [ProjectSnapshot] {
       [
         snapshot.project.folderName,
         snapshot.name,
+        snapshot.local.name,
         snapshot.repository?.description,
         snapshot.repository?.name
       ]

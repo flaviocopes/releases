@@ -23,6 +23,17 @@ struct ProjectStoreTests {
   }
 
   @Test
+  func renamesAndGoesBackToTheFolderName() async throws {
+    let store = store()
+    try await store.add("/Users/flavio/dev/factorylog")
+    #expect(try await store.rename("/Users/flavio/dev/factorylog", to: "  Factory Log "))
+    #expect(try await store.load().projects.first?.displayName == "Factory Log")
+    #expect(try await store.rename("/Users/flavio/dev/factorylog", to: ""))
+    #expect(try await store.load().projects.first?.displayName == nil)
+    #expect(try await !store.rename("/Users/flavio/dev/gone", to: "Gone"))
+  }
+
+  @Test
   func keepsOldReleasesWhenAFetchFails() async throws {
     let store = store()
     try await store.add("/Users/flavio/dev/soundscape")

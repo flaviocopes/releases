@@ -69,6 +69,15 @@ struct ProjectActions: View {
     }
     .help("Open the project in Cursor")
     .disabled(!snapshot.local.exists)
+    if GitHubDesktop.isInstalled {
+      Button {
+        model.openInGitHubDesktop(snapshot)
+      } label: {
+        Label("Open in GitHub Desktop", systemImage: "arrow.triangle.pull")
+      }
+      .help("Open the project in GitHub Desktop")
+      .disabled(!snapshot.local.exists)
+    }
     Button {
       NSWorkspace.shared.activateFileViewerSelecting([snapshot.project.url])
     } label: {

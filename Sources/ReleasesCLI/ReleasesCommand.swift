@@ -66,6 +66,8 @@ struct ReleasesCommand {
       try await open(parsed, tracker)
     case "refresh":
       try await refresh(parsed, tracker)
+    case "rename":
+      try await rename(parsed, tracker)
     case "remove":
       try await remove(parsed, tracker)
     case "store-path":
@@ -295,7 +297,7 @@ struct ReleasesCommand {
   }
 
   private static func open(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
-    let targets = ["--github", "--cursor", "--finder", "--release"].filter(options.has)
+    let targets = ["--github", "--cursor", "--github-desktop", "--finder", "--release"].filter(options.has)
     let wantsRelease = options.has("--release") || options.value("--version") != nil
       || options.value("--bump") != nil || options.value("--notes") != nil
     if targets.count > 1 {
@@ -323,6 +325,9 @@ struct ReleasesCommand {
     case "--cursor":
       try Cursor.open(snapshot.project.url)
       try report(options, OpenJSON(opened: "cursor", project: snapshot.name, path: path, url: nil), "Opened \(snapshot.name) in Cursor.")
+    case "--github-desktop":
+      try GitHubDesktop.open(snapshot.project.url)
+      try report(options, OpenJSON(opened: "github-desktop", project: snapshot.name, path: path, url: nil), "Opened \(snapshot.name) in GitHub Desktop.")
     case "--finder":
       try openURL(nil, arguments: ["-R", path])
       try report(options, OpenJSON(opened: "finder", project: snapshot.name, path: path, url: nil), "Showed \(snapshot.name) in the Finder.")
@@ -354,6 +359,25 @@ struct ReleasesCommand {
     }
     Output.table(snapshots)
     reportFetchErrors(snapshots)
+  }
+
+  private static func rename(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    let identifier = try identifier(options, command: "rename")
+    let input = options.positionals.dropFirst().joined(separator: " ")
+    guard options.has("--reset") || !options.positionals.dropFirst().isEmpty else {
+      throw CLIError.missingName
+    }
+    let snapshot = try await tracker.snapshots().project(matching: identifier)
+    let name = options.has("--reset") ? nil : snapshot.displayName(for: input)
+    try await tracker.rename(snapshot.id, to: name)
+
+    if options.has("--json") {
+      try Output.json(RenameJSON(name: name ?? snapshot.local.name, detectedName: snapshot.local.name, path: snapshot.project.path))
+    } else if let name {
+      print("Renamed \(snapshot.name) to \(name). The app shows the new name right away.")
+    } else {
+      print("\(snapshot.local.name) is back to the name read from its folder.")
+    }
   }
 
   private static func remove(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {

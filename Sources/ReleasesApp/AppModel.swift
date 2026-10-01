@@ -189,6 +189,24 @@ final class AppModel {
     Task { await add(urls) }
   }
 
+  /// The name lives in Releases only. Nil goes back to the one read from the folder.
+  func rename(_ snapshot: ProjectSnapshot, to name: String?) async {
+    do {
+      try await tracker.rename(snapshot.id, to: name)
+      await reload()
+    } catch {
+      errorMessage = error.localizedDescription
+    }
+  }
+
+  func openInGitHubDesktop(_ snapshot: ProjectSnapshot) {
+    do {
+      try GitHubDesktop.open(snapshot.project.url)
+    } catch {
+      errorMessage = error.localizedDescription
+    }
+  }
+
   func openInCursor(_ snapshot: ProjectSnapshot) {
     do {
       try Cursor.open(snapshot.project.url)

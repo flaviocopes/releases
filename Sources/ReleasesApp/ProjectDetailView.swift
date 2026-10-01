@@ -14,7 +14,7 @@ struct ProjectDetailView: View {
           FoundBanner(project: found)
         }
 
-        Header(snapshot: snapshot, lastActivity: found?.lastActivity)
+        Header(snapshot: snapshot, lastActivity: found?.lastActivity, canRename: found == nil)
 
         if let commits = snapshot.unreleasedCommits, !commits.isEmpty, let latest = snapshot.latestRelease {
           UnreleasedSection(commits: commits, since: latest.tag)
@@ -85,6 +85,7 @@ private struct Header: View {
   @Environment(AppModel.self) private var model
   let snapshot: ProjectSnapshot
   var lastActivity: Date?
+  var canRename = true
 
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
@@ -92,8 +93,7 @@ private struct Header: View {
         ProjectIcon(snapshot: snapshot, size: 72)
 
         VStack(alignment: .leading, spacing: 4) {
-          Text(snapshot.name)
-            .font(.system(size: 28, weight: .bold))
+          ProjectName(snapshot: snapshot, canRename: canRename)
 
           if let repository = snapshot.repository {
             Link(destination: repository.url) {
@@ -177,6 +177,54 @@ private struct Header: View {
       }
       .font(.callout)
     }
+  }
+}
+
+/// The project's name. Double-click it to give the project another name, in Releases only.
+private struct ProjectName: View {
+  @Environment(AppModel.self) private var model
+  let snapshot: ProjectSnapshot
+  let canRename: Bool
+
+  @State private var isEditing = false
+  @State private var text = ""
+  @FocusState private var isFocused: Bool
+
+  var body: some View {
+    if isEditing {
+      TextField(snapshot.local.name, text: $text)
+        .textFieldStyle(.plain)
+        .font(.system(size: 28, weight: .bold))
+        .focused($isFocused)
+        .onSubmit(save)
+        .onExitCommand { isEditing = false }
+        .onChange(of: isFocused) { _, focused in
+          if !focused, isEditing { save() }
+        }
+        .onAppear { isFocused = true }
+    } else {
+      Text(snapshot.name)
+        .font(.system(size: 28, weight: .bold))
+        .onTapGesture(count: 2) {
+          guard canRename else { return }
+          text = snapshot.name
+          isEditing = true
+        }
+        .help(help)
+    }
+  }
+
+  private var help: String {
+    guard canRename else { return "" }
+    guard snapshot.project.displayName != nil else { return "Double-click to rename it in Releases" }
+    return "Double-click to rename it. Clear the name to go back to \"\(snapshot.local.name)\"."
+  }
+
+  private func save() {
+    isEditing = false
+    let name = snapshot.displayName(for: text)
+    guard name != snapshot.project.displayName else { return }
+    Task { await model.rename(snapshot, to: name) }
   }
 }
 

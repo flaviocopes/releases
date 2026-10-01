@@ -102,6 +102,8 @@ public struct Release: Codable, Hashable, Sendable, Identifiable {
 public struct TrackedProject: Codable, Hashable, Sendable, Identifiable {
   public var path: String
   public var addedAt: Date
+  /// A name given in Releases, shown instead of the one read from the folder. It changes nothing in the project.
+  public var displayName: String?
   public var releases: [Release]?
   public var releasesFetchedAt: Date?
   public var fetchError: String?

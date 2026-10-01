@@ -44,7 +44,8 @@ defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
 - Each project shows its version and the file it comes from, its branch, the commits you haven't pushed or released, and every release with its downloads
 - **Create Release** suggests the next version, writes the prompt for your coding agent, and opens it in Cursor. Nothing runs until you send it
 - Add a project by dropping its folder on the window, or with `releases add`. **Add More…** lists the apps and command-line tools next to your projects that aren't in the list yet
-- The name and the icon come from the app you built, in `dist/` or `build/`
+- The name and the icon come from the app you built, in `dist/` or `build/`. Double-click a project's name to give it another one, in Releases only
+- Open a project on GitHub, in Cursor, in GitHub Desktop or in the Finder from its page
 - The releases refresh every 10 minutes and when you switch to the app, and `⌘R` refreshes them right away
 - A `releases` command for your terminal and your agents, with JSON output
 - Updates from inside the app
@@ -118,7 +119,8 @@ Pass another folder to install it somewhere else, like `./Scripts/install-cli.sh
 | `releases hide <project>` | Leaves a project out of Add Projects |
 | `releases unhide <folder>` | Brings a hidden project back |
 | `releases prompt <project>` | Prints the release prompt, or opens it in Cursor with `--cursor` |
-| `releases open <project>` | Shows a project in the app, or on GitHub, in Cursor or in the Finder |
+| `releases open <project>` | Shows a project in the app, or opens it on GitHub, in Cursor, in GitHub Desktop or in the Finder |
+| `releases rename <project> <name>` | Gives a project another name in Releases, or `--reset` to go back |
 | `releases refresh` | Fetches every release from GitHub now |
 | `releases remove <project>` | Takes projects off the list, and leaves their folders alone |
 

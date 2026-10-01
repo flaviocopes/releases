@@ -60,6 +60,18 @@ struct ProjectSnapshotTests {
   }
 
   @Test
+  func aGivenNameWinsAndBothNamesFindTheProject() throws {
+    var renamed = snapshot(path: "/Users/flavio/dev/factorylog", name: "factorylog")
+    renamed.project.displayName = "Factory Log"
+    #expect(renamed.name == "Factory Log")
+    #expect(try [renamed].project(matching: "factory log").id == renamed.id)
+    #expect(try [renamed].project(matching: "factorylog").id == renamed.id)
+    #expect(renamed.displayName(for: " Factory Log ") == "Factory Log")
+    #expect(renamed.displayName(for: "factorylog") == nil)
+    #expect(renamed.displayName(for: "  ") == nil)
+  }
+
+  @Test
   func firstReleaseIsTheOldestPublicOne() {
     let snapshot = snapshot(releases: [release("v1.1.0", daysAgo: 1), release("v1.0.0", daysAgo: 5), release("v0.9.0", daysAgo: 9, prerelease: true)])
     #expect(snapshot.firstRelease?.tag == "v1.0.0")

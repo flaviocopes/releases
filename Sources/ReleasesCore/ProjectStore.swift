@@ -48,6 +48,18 @@ public actor ProjectStore {
     return true
   }
 
+  /// Gives a project a name in Releases. Nil or an empty name goes back to the one read from the folder.
+  /// Returns false when the folder isn't in the list.
+  @discardableResult
+  public func rename(_ path: String, to name: String?) throws -> Bool {
+    var list = try load()
+    guard let index = list.projects.firstIndex(where: { $0.path == path }) else { return false }
+    let trimmed = name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    list.projects[index].displayName = trimmed.isEmpty ? nil : trimmed
+    try save(list)
+    return true
+  }
+
   /// Leaves a folder out of the projects found on disk. Returns false when it was already hidden.
   @discardableResult
   public func hide(_ path: String) throws -> Bool {

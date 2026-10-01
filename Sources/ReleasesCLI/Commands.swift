@@ -100,8 +100,8 @@ enum Commands {
     ),
     CommandSpec(
       name: "open",
-      summary: "Show a project in the app, or open it on GitHub, in Cursor or in the Finder.",
-      usage: "releases open [<project>] [--release [--version <x.y.z> | --bump <level>] [--notes <text>] | --github | --cursor | --finder]",
+      summary: "Show a project in the app, or open it on GitHub, in Cursor, in GitHub Desktop or in the Finder.",
+      usage: "releases open [<project>] [--release [--version <x.y.z> | --bump <level>] [--notes <text>] | --github | --cursor | --github-desktop | --finder]",
       options: [
         Option(name: "--release", help: "Open the app's Create Release sheet, ready for you to review."),
         versionOption,
@@ -109,6 +109,7 @@ enum Commands {
         notes,
         Option(name: "--github", help: "Open the project on GitHub."),
         Option(name: "--cursor", help: "Open the project in Cursor."),
+        Option(name: "--github-desktop", help: "Open the project in GitHub Desktop."),
         Option(name: "--finder", help: "Show the project folder in the Finder."),
         json
       ],
@@ -124,6 +125,16 @@ enum Commands {
       usage: "releases refresh [--json]",
       options: [json],
       details: "When the app is running, it also looks for projects on disk again."
+    ),
+    CommandSpec(
+      name: "rename",
+      summary: "Give a project another name in Releases. The folder and the app stay as they are.",
+      usage: "releases rename <project> <name> [--reset] [--json]",
+      options: [
+        Option(name: "--reset", help: "Go back to the name read from the folder."),
+        json
+      ],
+      details: "An empty name works like --reset. The project is still found by its old name."
     ),
     CommandSpec(
       name: "remove",

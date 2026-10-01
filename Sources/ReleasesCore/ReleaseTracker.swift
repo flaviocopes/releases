@@ -86,6 +86,12 @@ public struct ReleaseTracker: Sendable {
     try await store.remove(path)
   }
 
+  /// Nil or an empty name goes back to the one read from the folder.
+  @discardableResult
+  public func rename(_ path: String, to name: String?) async throws -> Bool {
+    try await store.rename(path, to: name)
+  }
+
   // MARK: - Projects on disk
 
   /// Apps and CLIs next to the tracked projects that aren't in the list or hidden, the most recently

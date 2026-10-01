@@ -98,6 +98,7 @@ enum CLIError: LocalizedError {
   case alreadyTracked(name: String)
   case notOnGitHub(name: String)
   case couldNotOpen
+  case missingName
 
   var errorDescription: String? {
     switch self {
@@ -121,6 +122,8 @@ enum CLIError: LocalizedError {
       "\(name) isn't on GitHub yet."
     case .couldNotOpen:
       "macOS couldn't open it."
+    case .missingName:
+      "Add the new name, or --reset. Example: releases rename factorylog \"Factory Log\""
     }
   }
 }
