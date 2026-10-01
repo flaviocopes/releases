@@ -29,6 +29,9 @@ final class AppModel {
   var lastRefresh: Date?
   var errorMessage: String?
   var releaseDraft: ReleaseDraft?
+  var showsAddProjects = false
+  /// True while the app looks for projects on disk.
+  private(set) var isDiscovering = false
 
   /// Releases fetched more recently than this are shown from the cache.
   static let cacheAge: TimeInterval = 300
@@ -46,9 +49,6 @@ final class AppModel {
 
   @ObservationIgnored
   private var lastDiscovery: Date?
-
-  @ObservationIgnored
-  private var isDiscovering = false
 
   @ObservationIgnored
   private var hiddenPaths: Set<String> = []
@@ -121,6 +121,13 @@ final class AppModel {
     found = projects
     lastDiscovery = .now
     fixSelection()
+  }
+
+  /// The Add Projects sheet looks right away the first time, before the hourly look has run.
+  func discoverIfNeeded() async {
+    if lastDiscovery == nil {
+      await discover(force: true)
+    }
   }
 
   /// Drops found projects hidden from the CLI, and looks again when one is shown again.

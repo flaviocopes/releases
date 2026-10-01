@@ -16,10 +16,6 @@ struct ProjectListView: View {
       }
       .tag(SidebarItem.home)
 
-      if !model.foundProjects.isEmpty {
-        OnThisMacSection()
-      }
-
       Section("Projects") {
         ForEach(model.snapshots) { snapshot in
           ProjectRow(snapshot: snapshot)
@@ -32,6 +28,7 @@ struct ProjectListView: View {
               }
             }
         }
+        AddMoreRow()
       }
     }
     .listStyle(.sidebar)
@@ -41,11 +38,11 @@ struct ProjectListView: View {
     .toolbar {
       ToolbarItem {
         Button {
-          model.chooseFolders()
+          model.showsAddProjects = true
         } label: {
-          Label("Add Project", systemImage: "plus")
+          Label("Add Projects", systemImage: "plus")
         }
-        .help("Add a project folder")
+        .help("Add projects from this Mac, or choose a folder")
       }
     }
   }
@@ -127,103 +124,27 @@ private struct ProjectRow: View {
   }
 }
 
-/// Apps and CLIs on disk that aren't in the list, the most recently worked on first.
-private struct OnThisMacSection: View {
+/// Opens the Add Projects sheet. The badge counts the apps and tools on this Mac that aren't in the list.
+private struct AddMoreRow: View {
   @Environment(AppModel.self) private var model
-  @AppStorage("showsOnThisMac") private var isExpanded = true
-  @State private var showsAll = false
-
-  static let collapsedCount = 5
 
   var body: some View {
-    let projects = model.foundProjects
-
-    Section(isExpanded: $isExpanded) {
-      ForEach(visible(projects)) { project in
-        FoundRow(project: project)
-          .tag(SidebarItem.found(project.id))
-          .contextMenu {
-            Button("Add to List") {
-              Task { await model.add([project.snapshot.project.url]) }
-            }
-            Button("Create Release…") {
-              model.createRelease(project.snapshot)
-            }
-            .disabled(!Cursor.isInstalled)
-            Divider()
-            ProjectActions(snapshot: project.snapshot)
-            Divider()
-            Button("Hide") {
-              Task { await model.hide(project) }
-            }
-          }
-      }
-
-      if projects.count > Self.collapsedCount {
-        Button(showsAll ? "Show Less" : "Show \(projects.count - Self.collapsedCount) More") {
-          withAnimation(.easeOut(duration: 0.15)) { showsAll.toggle() }
-        }
-        .buttonStyle(.plain)
-        .font(.caption)
+    HStack(spacing: 10) {
+      Image(systemName: "plus.circle.fill")
+        .font(.system(size: 22))
         .foregroundStyle(.secondary)
-        .padding(.leading, 32)
-      }
-    } header: {
-      Text("On This Mac")
-        .help("Apps and CLIs in the folders around your projects that aren't in the list yet")
-    }
-  }
-
-  /// The first few, plus the selected one when it's further down.
-  private func visible(_ projects: [FoundProject]) -> [FoundProject] {
-    guard !showsAll else { return projects }
-    var visible = Array(projects.prefix(Self.collapsedCount))
-    if let selected = model.selectedFound, !visible.contains(where: { $0.id == selected.id }) {
-      visible.append(selected)
-    }
-    return visible
-  }
-}
-
-private struct FoundRow: View {
-  @Environment(AppModel.self) private var model
-  let project: FoundProject
-
-  @State private var isHovering = false
-
-  var body: some View {
-    HStack(spacing: 8) {
-      ProjectIcon(snapshot: project.snapshot, size: 24)
-
-      VStack(alignment: .leading, spacing: 1) {
-        Text(project.name)
-          .lineLimit(1)
-        Text(subtitle)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-      }
-
-      Spacer(minLength: 4)
-
-      if isHovering {
-        Button {
-          Task { await model.add([project.snapshot.project.url]) }
-        } label: {
-          Image(systemName: "plus.circle.fill")
-        }
-        .buttonStyle(.plain)
+        .frame(width: 34)
+      Text("Add More…")
         .foregroundStyle(.secondary)
-        .help("Add \(project.name) to the list")
-      }
+      Spacer(minLength: 0)
     }
-    .padding(.vertical, 1)
-    .onHover { isHovering = $0 }
-  }
-
-  private var subtitle: String {
-    guard let date = project.lastActivity else { return project.statusText }
-    return "\(project.statusText) · \(date.formatted(.relative(presentation: .named)))"
+    .padding(.vertical, 2)
+    .contentShape(Rectangle())
+    .onTapGesture {
+      model.showsAddProjects = true
+    }
+    .badge(model.foundProjects.count)
+    .help("Add the apps and tools on this Mac that aren't in the list, or choose a folder")
   }
 }
 

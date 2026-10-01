@@ -63,7 +63,7 @@ private struct FoundBanner: View {
       Button("Hide") {
         Task { await model.hide(project) }
       }
-      .help("Leave it out of On This Mac. 'releases unhide' brings it back.")
+      .help("Leave it out of Add Projects. 'releases unhide' brings it back.")
       Button("Add to List") {
         Task { await model.add([project.snapshot.project.url]) }
       }

@@ -180,6 +180,13 @@ enum Screenshot {
     window.toolbarStyle = .unified
     window.contentView = host
     window.center()
+    // Beside the pointer, so it can't hover a row while it captures. Fully off screen, the window can't become key.
+    let mouse = NSEvent.mouseLocation
+    if window.frame.insetBy(dx: -40, dy: -40).contains(mouse), let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) {
+      let roomOnLeft = mouse.x - screen.frame.minX
+      let roomOnRight = screen.frame.maxX - mouse.x
+      window.setFrameOrigin(NSPoint(x: roomOnLeft > roomOnRight ? mouse.x - window.frame.width - 60 : mouse.x + 60, y: window.frame.minY))
+    }
     _ = NotificationCenter.default.addObserver(forName: NSApplication.didFinishLaunchingNotification, object: nil, queue: .main) { _ in
       MainActor.assumeIsolated {
         NSApp.activate()
@@ -202,11 +209,24 @@ final class ActiveWindow: NSWindow {
   @objc(_hasMainAppearance) func hasMainAppearance() -> Bool { true }
 }
 
+/// The sidebar draws its selection in the accent color only while it has the focus.
+@MainActor
+func focusSidebar(_ window: NSWindow) {
+  func table(in view: NSView) -> NSTableView? {
+    if let table = view as? NSTableView { return table }
+    return view.subviews.lazy.compactMap(table(in:)).first
+  }
+  if let root = window.contentView, let sidebar = table(in: root) {
+    window.makeFirstResponder(sidebar)
+  }
+}
+
 @MainActor
 func capture(_ window: NSWindow) async {
   await Demo.prepare()
   for page in Demo.pages {
     await Demo.select(page.selection)
+    focusSidebar(window)
     for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
       NSApp.appearance = NSAppearance(named: appearance)
       try? await Task.sleep(for: .seconds(1))

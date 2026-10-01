@@ -64,13 +64,13 @@ enum Commands {
         It looks in the folders that hold your projects, like ~/dev, for Xcode, SwiftPM,
         Electron and Tauri projects and npm packages with a command. Clones of other
         people's repos and hidden folders are left out. The most recently worked on come first.
-        The app shows the same projects in its On This Mac list.
+        The app shows the same projects in its Add Projects sheet.
         """,
       aliases: ["found"]
     ),
     CommandSpec(
       name: "hide",
-      summary: "Leave projects out of 'discover' and the app's On This Mac list.",
+      summary: "Leave projects out of 'discover' and the app's Add Projects sheet.",
       usage: "releases hide <project>... [--json]",
       options: [json],
       details: "A project is its folder path, or the name 'discover' shows. Undo it with 'releases unhide'."

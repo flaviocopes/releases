@@ -8,8 +8,8 @@ import AppKit
 import SwiftUI
 
 let name = "Releases"
-let tagline = "Every release of your Mac apps,\nand the ones you haven't shipped."
-let chips = ["Latest releases", "On This Mac", "A CLI for agents"]
+let tagline = "Every release of your Mac apps,\nand what's waiting to ship."
+let chips = ["Latest releases", "Create Release", "A CLI for agents"]
 let size = CGSize(width: 1280, height: 560)
 // Where the window's top-left corner sits, and how much it's scaled down.
 let windowOrigin = CGPoint(x: 580, y: 75)

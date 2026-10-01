@@ -41,8 +41,8 @@ struct ReleasesDesktopApp: App {
         }
       }
       CommandGroup(replacing: .newItem) {
-        Button("Add Project…") {
-          model.chooseFolders()
+        Button("Add Projects…") {
+          model.showsAddProjects = true
         }
         .keyboardShortcut("o")
       }

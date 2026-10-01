@@ -38,6 +38,9 @@ struct ContentView: View {
     .sheet(item: $model.releaseDraft) { draft in
       CreateReleaseSheet(draft: draft)
     }
+    .sheet(isPresented: $model.showsAddProjects) {
+      AddProjectsSheet()
+    }
     .alert(
       "Releases",
       isPresented: Binding(
@@ -77,14 +80,10 @@ private struct EmptyStateView: View {
     ContentUnavailableView {
       Label("Drop a project folder here", systemImage: "shippingbox")
     } description: {
-      Text(
-        model.foundProjects.isEmpty
-          ? "Releases finds the GitHub repo and the version, and lists every release.\nAgents can add projects with `releases add <folder>`."
-          : "Releases finds the GitHub repo and the version, and lists every release.\nPick one of the apps it found on this Mac in the sidebar, or let an agent run `releases add <folder>`."
-      )
+      Text("Releases finds the GitHub repo and the version, and lists every release.\nAgents can add projects with `releases add <folder>`.")
     } actions: {
-      Button("Add Project…") {
-        model.chooseFolders()
+      Button("Add Projects…") {
+        model.showsAddProjects = true
       }
       .buttonStyle(.borderedProminent)
     }
