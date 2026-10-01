@@ -39,6 +39,11 @@ public struct ProjectSnapshot: Identifiable, Hashable, Sendable {
     releases.first(where: \.isPublic)
   }
 
+  /// The release that launched the project: its oldest public one, whatever its version.
+  public var firstRelease: Release? {
+    releases.last(where: \.isPublic)
+  }
+
   public var localVersion: SemanticVersion? {
     local.version?.semantic
   }
@@ -140,6 +145,11 @@ public struct TimelineEntry: Identifiable, Hashable, Sendable {
   public var date: Date
 
   public var id: String { "\(project.id)#\(release.tag)" }
+
+  /// A new app: the project's first public release.
+  public var isFirstRelease: Bool {
+    project.firstRelease?.tag == release.tag
+  }
 }
 
 extension [ProjectSnapshot] {

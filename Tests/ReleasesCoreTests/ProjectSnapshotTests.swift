@@ -60,6 +60,14 @@ struct ProjectSnapshotTests {
   }
 
   @Test
+  func firstReleaseIsTheOldestPublicOne() {
+    let snapshot = snapshot(releases: [release("v1.1.0", daysAgo: 1), release("v1.0.0", daysAgo: 5), release("v0.9.0", daysAgo: 9, prerelease: true)])
+    #expect(snapshot.firstRelease?.tag == "v1.0.0")
+    #expect([snapshot].timeline().filter(\.isFirstRelease).map(\.release.tag) == ["v1.0.0"])
+    #expect(self.snapshot(releases: []).firstRelease == nil)
+  }
+
+  @Test
   func suggestsTheNextVersion() {
     #expect(snapshot(version: "1.0.2", releases: [release("v1.0.2")]).suggestedVersion.description == "1.0.3")
     #expect(snapshot(version: "1.1.0", releases: [release("v1.0.2")]).suggestedVersion.description == "1.1.0")

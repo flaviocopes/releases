@@ -151,7 +151,7 @@ struct ReleasesCommand {
       [
         entry.date.formatted(date: .abbreviated, time: .shortened),
         entry.project.name,
-        entry.release.tag + (entry.release.isPrerelease ? " [prerelease]" : ""),
+        entry.release.tag + (entry.release.isPrerelease ? " [prerelease]" : "") + (entry.isFirstRelease ? " [first release]" : ""),
         entry.release.downloadCount == 1 ? "1 download" : "\(entry.release.downloadCount) downloads"
       ]
     })

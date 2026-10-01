@@ -148,6 +148,7 @@ enum Output {
       var flags: [String] = []
       if release.isDraft { flags.append("draft") }
       if release.isPrerelease { flags.append("prerelease") }
+      if release.id == snapshot.firstRelease?.id { flags.append("first release") }
       let downloads = release.downloadCount == 1 ? "1 download" : "\(release.downloadCount) downloads"
       print(trimTrailingSpaces(
         (["", release.tag, date(release.publishedAt), downloads, release.url.absoluteString] + flags.map { "[\($0)]" }).joined(separator: "  ")
@@ -172,6 +173,7 @@ struct ReleaseJSON: Encodable {
   var url: URL
   var isDraft: Bool
   var isPrerelease: Bool
+  var isFirstRelease: Bool
   var downloadCount: Int
   var assets: [ReleaseAsset]
   var changes: [String]
@@ -183,6 +185,7 @@ struct ReleaseJSON: Encodable {
     url = release.url
     isDraft = release.isDraft
     isPrerelease = release.isPrerelease
+    isFirstRelease = release.id == snapshot.firstRelease?.id
     downloadCount = release.downloadCount
     assets = release.assets
     changes = snapshot.changes(in: release).map(\.text)
@@ -199,6 +202,7 @@ struct TimelineJSON: Encodable {
   var publishedAt: Date
   var url: URL
   var isPrerelease: Bool
+  var isFirstRelease: Bool
   var downloadCount: Int
   var changes: [String]
 
@@ -211,6 +215,7 @@ struct TimelineJSON: Encodable {
     publishedAt = entry.date
     url = entry.release.url
     isPrerelease = entry.release.isPrerelease
+    isFirstRelease = entry.isFirstRelease
     downloadCount = entry.release.downloadCount
     changes = entry.project.changes(in: entry.release).map(\.text)
   }

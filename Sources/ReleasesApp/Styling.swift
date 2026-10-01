@@ -109,6 +109,23 @@ struct Tag: View {
   }
 }
 
+extension Color {
+  /// Marks a project's first release, the one that launched it.
+  static let firstRelease = Color.pink
+}
+
+struct FirstReleaseTag: View {
+  var body: some View {
+    Label("First release", systemImage: "sparkles")
+      .font(.caption2.weight(.semibold))
+      .padding(.horizontal, 6)
+      .padding(.vertical, 2)
+      .foregroundStyle(Color.firstRelease)
+      .background(Capsule().fill(Color.firstRelease.opacity(0.14)))
+      .help("The release that launched this app")
+  }
+}
+
 struct Card<Content: View>: View {
   @ViewBuilder let content: Content
 

@@ -38,7 +38,7 @@ enum Commands {
         refresh,
         json
       ],
-      details: "Drafts are left out. Prereleases are marked."
+      details: "Drafts are left out. Prereleases and each app's first release are marked."
     ),
     CommandSpec(
       name: "show",

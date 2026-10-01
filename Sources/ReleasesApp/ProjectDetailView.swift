@@ -248,6 +248,7 @@ private struct ReleasesSection: View {
             ReleaseRow(
               release: release,
               isLatest: release.id == snapshot.latestRelease?.id,
+              isFirst: release.id == snapshot.firstRelease?.id,
               changes: snapshot.changes(in: release)
             )
           }
@@ -287,6 +288,7 @@ struct SectionTitle: View {
 private struct ReleaseRow: View {
   let release: Release
   let isLatest: Bool
+  let isFirst: Bool
   let changes: [Change]
 
   @State private var showsDetails = false
@@ -305,6 +307,7 @@ private struct ReleaseRow: View {
         }
 
         if isLatest { Tag(text: "Latest", color: .green) }
+        if isFirst { FirstReleaseTag() }
         if release.isDraft { Tag(text: "Draft", color: .orange) }
         if release.isPrerelease { Tag(text: "Prerelease", color: .purple) }
 
@@ -357,10 +360,13 @@ private struct ReleaseRow: View {
       .foregroundStyle(.secondary)
     }
     .padding(14)
-    .background(
-      RoundedRectangle(cornerRadius: 12, style: .continuous)
-        .fill(.quaternary.opacity(isHovering ? 0.6 : 0.4))
-    )
+    .background {
+      if isFirst {
+        LinearGradient(colors: [Color.firstRelease.opacity(0.14), Color.firstRelease.opacity(0.04)], startPoint: .leading, endPoint: .trailing)
+      }
+    }
+    .background(.quaternary.opacity(isHovering ? 0.6 : 0.4))
+    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     .onHover { isHovering = $0 }
   }
 }

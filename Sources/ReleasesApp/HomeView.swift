@@ -148,7 +148,7 @@ private struct DaySection: View {
 
       RowGroup {
         ForEach(entries) { entry in
-          RowButton {
+          RowButton(tint: entry.isFirstRelease ? .firstRelease : nil) {
             model.select(entry.project)
           } content: {
             TimelineRow(entry: entry)
@@ -188,6 +188,9 @@ private struct TimelineRow: View {
             .foregroundStyle(.secondary)
           if entry.release.isPrerelease {
             Tag(text: "Prerelease", color: .purple)
+          }
+          if entry.isFirstRelease {
+            FirstReleaseTag()
           }
         }
 
@@ -235,15 +238,14 @@ private struct RowGroup<Content: View>: View {
     VStack(spacing: 0) {
       content
     }
-    .background(
-      RoundedRectangle(cornerRadius: 12, style: .continuous)
-        .fill(.quaternary.opacity(0.4))
-    )
+    .background(.quaternary.opacity(0.4))
+    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
   }
 }
 
-/// A whole row that acts as a button and lights up on hover.
+/// A whole row that acts as a button and lights up on hover. The group clips it to its rounded corners.
 private struct RowButton<Content: View>: View {
+  var tint: Color?
   let action: () -> Void
   @ViewBuilder let content: Content
 
@@ -254,10 +256,12 @@ private struct RowButton<Content: View>: View {
       .padding(.horizontal, 14)
       .padding(.vertical, 10)
       .frame(maxWidth: .infinity, alignment: .leading)
-      .background(
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-          .fill(Color.primary.opacity(isHovering ? 0.05 : 0))
-      )
+      .background {
+        if let tint {
+          LinearGradient(colors: [tint.opacity(0.16), tint.opacity(0.04)], startPoint: .leading, endPoint: .trailing)
+        }
+      }
+      .background(Color.primary.opacity(isHovering ? 0.05 : 0))
       .contentShape(Rectangle())
       .onTapGesture(perform: action)
       .onHover { isHovering = $0 }

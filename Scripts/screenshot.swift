@@ -40,7 +40,8 @@ enum Demo {
       ]),
       project("Driftwood", folder: "driftwood", symbol: "timer", colors: (0xFFAE5C, 0xE8590C), version: "1.3.0", releases: [
         release("Driftwood", "1.3.0", hoursAgo: 4.2, downloads: 21, notes: ["**Menu bar timer.** The time left, always in sight.", "**Custom sounds.** Pick the chime at the end of a session."]),
-        release("Driftwood", "1.2.1", hoursAgo: 27, downloads: 64, notes: ["**Sleep-proof sessions.** A session keeps going when the Mac goes to sleep."])
+        release("Driftwood", "1.2.1", hoursAgo: 27, downloads: 64, notes: ["**Sleep-proof sessions.** A session keeps going when the Mac goes to sleep."]),
+        release("Driftwood", "1.0.0", hoursAgo: 1000, downloads: 181, notes: ["**Focus sessions** with a gentle chime at the end."])
       ]),
       project("Lumen", folder: "lumen", symbol: "camera.aperture", colors: (0xB79BFF, 0x6741D9), version: "1.0.0", releases: [
         release("Lumen", "1.0.0", hoursAgo: 30, downloads: 112, notes: ["**Capture any window** with its shadow, or without.", "**Annotate** with arrows, boxes and text.", "**Copy or save** in one click."])
