@@ -32,8 +32,9 @@ enum Commands {
     CommandSpec(
       name: "recent",
       summary: "List the releases of every project, newest first.",
-      usage: "releases recent [--limit <n>] [--refresh] [--json]",
+      usage: "releases recent [--first] [--limit <n>] [--refresh] [--json]",
       options: [
+        Option(name: "--first", help: "Only the first release of each project, to see when each app launched."),
         Option(name: "--limit", help: "Show at most this many releases (default 20).", takesValue: true),
         refresh,
         json
@@ -183,6 +184,7 @@ enum Commands {
         releases add ~/dev/soundscape      Track a project.
         releases list                      See every project and its latest release.
         releases recent                    See the latest releases across all projects.
+        releases recent --first            See when each app launched.
         releases discover                  See the apps on this Mac that aren't released yet.
         releases show soundscape           See all the releases of one project.
         releases prompt soundscape --bump minor --cursor

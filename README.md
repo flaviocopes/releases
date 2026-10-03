@@ -33,6 +33,7 @@ defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
 ## Features
 
 - **Latest Releases** puts every release of every project in one timeline, grouped by day, with its downloads and what changed
+- Each app's first release stands out in green. Switch to **First Releases** to see only those, by month, and when you launched each app
 - What changed comes from the project's `CHANGELOG.md`, or from the "What's new" part of the release notes on GitHub
 - **Waiting to ship** lists the projects with commits since their last release, or with a version newer than the last release
 - Each project shows its version and the file it comes from, its branch, the commits you haven't pushed or released, and every release with its downloads
@@ -107,7 +108,7 @@ Pass another folder to install it somewhere else, like `./Scripts/install-cli.sh
 | --- | --- |
 | `releases add <folder>` | Adds projects to the list |
 | `releases list` | Every project with its version, latest release and status |
-| `releases recent` | The latest releases across all projects |
+| `releases recent` | The latest releases across all projects, or only each app's first one with `--first` |
 | `releases show <project>` | A project and all its releases |
 | `releases discover` | The apps on this Mac that aren't in the list, like Add Projects in the app |
 | `releases hide <project>` | Leaves a project out of Add Projects |

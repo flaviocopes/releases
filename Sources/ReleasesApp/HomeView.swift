@@ -1,25 +1,38 @@
 import ReleasesCore
 import SwiftUI
 
-/// Every release of every project, newest first and grouped by day.
+/// Every release of every project, newest first and grouped by day. Or only the first ones, grouped by month.
 struct HomeView: View {
   @Environment(AppModel.self) private var model
 
   var body: some View {
-    let entries = model.snapshots.timeline()
+    @Bindable var model = model
+    let timeline = model.snapshots.timeline()
+    let firstOnly = model.showsFirstReleasesOnly
+    let entries = firstOnly ? timeline.filter(\.isFirstRelease) : timeline
 
     ScrollView {
       VStack(alignment: .leading, spacing: 26) {
-        VStack(alignment: .leading, spacing: 4) {
-          Text("Latest Releases")
-            .font(.system(size: 28, weight: .bold))
-          Text("Every release of your \(model.snapshots.count == 1 ? "project" : "\(model.snapshots.count) projects"), newest first.")
-            .foregroundStyle(.secondary)
+        HStack(spacing: 16) {
+          VStack(alignment: .leading, spacing: 4) {
+            Text("Latest Releases")
+              .font(.system(size: 28, weight: .bold))
+            Text(subtitle(entries))
+              .foregroundStyle(.secondary)
+          }
+          Spacer(minLength: 0)
+          Picker("Show", selection: $model.showsFirstReleasesOnly) {
+            Text("All Releases").tag(false)
+            Text("First Releases").tag(true)
+          }
+          .pickerStyle(.segmented)
+          .labelsHidden()
+          .fixedSize()
         }
 
-        Stats(entries: entries)
+        Stats(entries: timeline)
 
-        if !waiting.isEmpty {
+        if !firstOnly, !waiting.isEmpty {
           WaitingSection(snapshots: waiting)
         }
 
@@ -28,9 +41,22 @@ struct HomeView: View {
             Text("No releases on GitHub yet. They show up here as soon as you publish one.")
               .foregroundStyle(.secondary)
           }
+        } else if firstOnly {
+          ForEach(groups(entries, by: .month), id: \.start) { group in
+            TimelineSection(
+              title: group.start.formatted(.dateTime.month(.wide).year()),
+              detail: group.entries.count == 1 ? "1 app" : "\(group.entries.count) apps",
+              entries: group.entries,
+              firstReleasesOnly: true
+            )
+          }
         } else {
-          ForEach(days(entries), id: \.day) { group in
-            DaySection(day: group.day, entries: group.entries)
+          ForEach(groups(entries, by: .day), id: \.start) { group in
+            TimelineSection(
+              title: dayTitle(group.start),
+              detail: group.entries.count == 1 ? "1 release" : "\(group.entries.count) releases",
+              entries: group.entries
+            )
           }
         }
       }
@@ -48,10 +74,27 @@ struct HomeView: View {
     model.snapshots.filter { $0.status == .unreleasedChanges || $0.status == .readyToRelease }
   }
 
-  private func days(_ entries: [TimelineEntry]) -> [(day: Date, entries: [TimelineEntry])] {
+  private func subtitle(_ entries: [TimelineEntry]) -> String {
+    if model.showsFirstReleasesOnly {
+      return entries.count == 1 ? "When your app launched." : "When each of your \(entries.count) apps launched, newest first."
+    }
+    return "Every release of your \(model.snapshots.count == 1 ? "project" : "\(model.snapshots.count) projects"), newest first."
+  }
+
+  private func groups(_ entries: [TimelineEntry], by component: Calendar.Component) -> [(start: Date, entries: [TimelineEntry])] {
     let calendar = Calendar.current
-    let groups = Dictionary(grouping: entries) { calendar.startOfDay(for: $0.date) }
+    let groups = Dictionary(grouping: entries) { calendar.dateInterval(of: component, for: $0.date)?.start ?? $0.date }
     return groups.keys.sorted(by: >).map { ($0, groups[$0] ?? []) }
+  }
+
+  private func dayTitle(_ day: Date) -> String {
+    let calendar = Calendar.current
+    if calendar.isDateInToday(day) { return "Today" }
+    if calendar.isDateInYesterday(day) { return "Yesterday" }
+    if calendar.isDate(day, equalTo: .now, toGranularity: .year) {
+      return day.formatted(.dateTime.weekday(.wide).month(.wide).day())
+    }
+    return day.formatted(.dateTime.month(.wide).day().year())
   }
 }
 
@@ -137,21 +180,23 @@ private struct WaitingSection: View {
   }
 }
 
-private struct DaySection: View {
+private struct TimelineSection: View {
   @Environment(AppModel.self) private var model
-  let day: Date
+  let title: String
+  let detail: String
   let entries: [TimelineEntry]
+  var firstReleasesOnly = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-      SectionTitle(title: title, detail: entries.count == 1 ? "1 release" : "\(entries.count) releases")
+      SectionTitle(title: title, detail: detail)
 
       RowGroup {
         ForEach(entries) { entry in
           RowButton(tint: entry.isFirstRelease ? .firstRelease : nil) {
             model.select(entry.project)
           } content: {
-            TimelineRow(entry: entry)
+            TimelineRow(entry: entry, firstReleasesOnly: firstReleasesOnly)
           }
           if entry.id != entries.last?.id {
             Divider().padding(.leading, 62)
@@ -160,20 +205,12 @@ private struct DaySection: View {
       }
     }
   }
-
-  private var title: String {
-    let calendar = Calendar.current
-    if calendar.isDateInToday(day) { return "Today" }
-    if calendar.isDateInYesterday(day) { return "Yesterday" }
-    if calendar.isDate(day, equalTo: .now, toGranularity: .year) {
-      return day.formatted(.dateTime.weekday(.wide).month(.wide).day())
-    }
-    return day.formatted(.dateTime.month(.wide).day().year())
-  }
 }
 
 private struct TimelineRow: View {
   let entry: TimelineEntry
+  /// Every row is a first release, in a section for a whole month.
+  var firstReleasesOnly = false
 
   var body: some View {
     HStack(spacing: 12) {
@@ -189,7 +226,7 @@ private struct TimelineRow: View {
           if entry.release.isPrerelease {
             Tag(text: "Prerelease", color: .purple)
           }
-          if entry.isFirstRelease {
+          if entry.isFirstRelease, !firstReleasesOnly {
             FirstReleaseTag()
           }
         }
@@ -208,7 +245,7 @@ private struct TimelineRow: View {
         .foregroundStyle(.tertiary)
         .help(entry.release.downloadCount.downloads)
 
-      Text(entry.date, format: .dateTime.hour().minute())
+      Text(entry.date, format: firstReleasesOnly ? .dateTime.month(.abbreviated).day() : .dateTime.hour().minute())
         .font(.callout)
         .monospacedDigit()
         .foregroundStyle(.secondary)

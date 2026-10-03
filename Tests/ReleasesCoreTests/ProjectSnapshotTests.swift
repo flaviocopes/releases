@@ -113,6 +113,17 @@ struct ProjectSnapshotTests {
   }
 
   @Test
+  func firstReleasesListOneLaunchPerProjectNewestFirst() {
+    let launches = [
+      snapshot(path: "/dev/soundscape", name: "Soundscape", releases: [release("v1.1.0", daysAgo: 1), release("v1.0.0", daysAgo: 40)]),
+      snapshot(path: "/dev/noterepo", name: "NoteRepo", releases: [release("v2.0.0", daysAgo: 3), release("v1.0.0", daysAgo: 10)]),
+      snapshot(path: "/dev/shipyard", name: "Shipyard", releases: [release("v0.1.0", daysAgo: 2, prerelease: true)])
+    ].timeline().filter(\.isFirstRelease)
+
+    #expect(launches.map { "\($0.project.name) \($0.release.tag)" } == ["NoteRepo v1.0.0", "Soundscape v1.0.0"])
+  }
+
+  @Test
   func findsProjectsByNameFolderOrRepo() throws {
     let snapshots = [
       snapshot(path: "/Users/flavio/dev/cli-tools", name: "CLI Tools", repository: GitHubRepository(owner: "flaviocopes", name: "cli-tools")),

@@ -136,7 +136,8 @@ struct ReleasesCommand {
 
   private static func recent(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
     let snapshots = try await tracker.refresh(maxAge: options.has("--refresh") ? nil : cacheAge)
-    let timeline = snapshots.timeline()
+    let firstOnly = options.has("--first")
+    let timeline = firstOnly ? snapshots.timeline().filter(\.isFirstRelease) : snapshots.timeline()
     let entries = Array(timeline.prefix(try options.int("--limit") ?? 20))
 
     if options.has("--json") {
@@ -153,13 +154,13 @@ struct ReleasesCommand {
       [
         entry.date.formatted(date: .abbreviated, time: .shortened),
         entry.project.name,
-        entry.release.tag + (entry.release.isPrerelease ? " [prerelease]" : "") + (entry.isFirstRelease ? " [first release]" : ""),
+        entry.release.tag + (entry.release.isPrerelease ? " [prerelease]" : "") + (entry.isFirstRelease && !firstOnly ? " [first release]" : ""),
         entry.release.downloadCount == 1 ? "1 download" : "\(entry.release.downloadCount) downloads"
       ]
     })
     reportFetchErrors(snapshots)
     if entries.count < timeline.count {
-      Output.hint("Showing \(entries.count) of \(timeline.count) releases. Use --limit to see more.")
+      Output.hint("Showing \(entries.count) of \(timeline.count) \(firstOnly ? "first releases" : "releases"). Use --limit to see more.")
     }
   }
 
