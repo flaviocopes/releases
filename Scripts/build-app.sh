@@ -1,5 +1,6 @@
 #!/bin/sh
-# Builds a universal (Apple silicon and Intel) dist/Releases.app with an ad-hoc signature.
+# Builds a universal (Apple silicon and Intel) dist/Releases.app.
+# Signs with Flavio's Developer ID when the certificate is in the keychain, ad-hoc everywhere else.
 # The version comes from Commands.version in Sources/ReleasesCLI/Commands.swift.
 
 set -eu
@@ -79,7 +80,22 @@ cat > "$CONTENTS/Info.plist" <<PLIST
 </plist>
 PLIST
 
-codesign --force --deep --sign - "$APP"
+IDENTITY=$(security find-identity -v -p codesigning | awk '/"Developer ID Application: Flavio Copes \(DGFKNTAG99\)"/ { print $2; exit }')
+if [ -n "$IDENTITY" ]; then
+  SIGNATURE="Developer ID"
+  find "$APP" -type f | while IFS= read -r file; do
+    case $(file -b "$file") in
+      *Mach-O*) codesign --force --options runtime --timestamp --sign "$IDENTITY" "$file" ;;
+    esac
+  done
+  codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
+else
+  SIGNATURE="ad-hoc"
+  codesign --force --deep --sign - "$APP"
+fi
+codesign --verify --deep --strict "$APP"
+
 # Registers the releases:// links, so 'releases open' works before the app is ever opened.
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP"
+echo "Built $APP $VERSION for $(lipo -archs "$MACOS/Releases"), $SIGNATURE signed"
 echo "$APP"

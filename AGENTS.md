@@ -16,8 +16,8 @@ swift build                        # build every target (debug)
 swift test                         # run the tests, must pass before committing
 swift run releases list            # run the CLI from source
 swift run ReleasesApp              # run the app from source
-./Scripts/build-app.sh             # universal release build, produces dist/Releases.app (ad-hoc signed)
-./Scripts/build-release.sh         # the app zipped for a GitHub release, dist/Releases-<version>.zip
+./Scripts/build-app.sh             # universal release build, dist/Releases.app, Developer ID signed when the certificate is in the keychain
+./Scripts/build-release.sh         # zip for a GitHub release, notarizes when Developer ID signed, dist/Releases-<version>.zip
 ./Scripts/install-cli.sh           # release build of releases, symlinked into ~/.local/bin
 ./Scripts/screenshot.sh            # docs/screenshot-*.png from the real views, with made-up projects
 swift Scripts/render-banner.swift  # docs/banner.png from the icon and docs/screenshot-dark.png
@@ -49,5 +49,5 @@ Set `RELEASES_STORE=/tmp/releases-test/projects.json` to try things without touc
 - The app has no automated UI tests. Check visual changes by running `./Scripts/build-app.sh` and opening the app. `releases open <project>` jumps straight to a page. For the README, refresh the screenshots with `./Scripts/screenshot.sh` and the banner after them.
 - Screenshots and demos use made-up projects. `Scripts/screenshot.swift` points `RELEASES_STORE` at an empty file and fills the model in code, so it never shows a real project list or the folders on the Mac it runs on.
 - The icon is drawn by `Scripts/render-icon.swift` into `Assets/AppIcon.png`, and `Scripts/build-app.sh` turns it into `AppIcon.icns`. Change a constant and run `swift Scripts/render-icon.swift` instead of editing the PNG.
-- Apps are ad-hoc signed and not notarized. Sign deep, zip with `ditto -c -k --keepParent`, and check the signature again after unzipping, as `Scripts/build-release.sh` does.
+- Releases are signed with Flavio's Developer ID (team `DGFKNTAG99`) with the hardened runtime, and notarized by `Scripts/build-release.sh` when the certificate is in the keychain. It needs a notarytool keychain profile named `notary`. CI and forks have no certificate, so `Scripts/build-app.sh` signs ad-hoc there and `Scripts/build-release.sh` skips notarization. Zip with `ditto -c -k --keepParent`, and check the signature again after unzipping. Every release gets a section in `CHANGELOG.md` when that file exists, newest first.
 - Never write tokens to the list file or print them.

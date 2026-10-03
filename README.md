@@ -12,23 +12,13 @@ Read the announcement and watch the 30-second demo on my blog: [I built Releases
 
 ## Download
 
-Get `Releases-1.3.0.zip` from the [latest release](https://github.com/flaviocopes/releases/releases/latest), unzip it, and drag Releases to your Applications folder. It runs on macOS 14 Sonoma or later, on Apple silicon and Intel Macs.
+Get `Releases-1.4.0.zip` from the [latest release](https://github.com/flaviocopes/releases/releases/latest), unzip it, and drag Releases to your Applications folder. It runs on macOS 14 Sonoma or later, on Apple silicon and Intel Macs.
 
 ### Opening it the first time
 
-Releases isn't signed with an Apple Developer ID or notarized by Apple. So the first time you open it, macOS says it "could not verify Releases is free of malware". Click **Done**, then allow it in one of two ways.
+Releases is signed with my Apple Developer ID and notarized by Apple. The first time you open it, macOS asks if you're sure you want to open an app downloaded from the internet. Click **Open**.
 
-In System Settings, open **Privacy & Security** and scroll down to the message about Releases. Click **Open Anyway**, confirm, and open the app again. The button shows up for about an hour after you try to open the app.
-
-In Terminal, remove the quarantine flag macOS adds to downloaded files, then open the app:
-
-```sh
-xattr -dr com.apple.quarantine /Applications/Releases.app
-```
-
-The same command fixes a message saying Releases is damaged. You don't need to turn off Gatekeeper for either option.
-
-On a work laptop you might not be able to install apps in `/Applications`. You can keep Releases in the `Applications` folder inside your home folder, and run the command on `~/Applications/Releases.app`. If your company blocks apps that aren't notarized, ask your IT team.
+On a work laptop you might not be able to install apps in `/Applications`. You can keep Releases in the `Applications` folder inside your home folder instead.
 
 ### Updates
 
@@ -179,7 +169,13 @@ Build the app and open it:
 open dist/Releases.app
 ```
 
-It builds a universal app in `dist/Releases.app`, ad-hoc signed, and registers its `releases://` links. A copy you build yourself opens without a warning. You can also run the development build with `swift run ReleasesApp`.
+The script builds a universal app in `dist/Releases.app` and registers its `releases://` links. It signs with my Developer ID when that certificate is in the keychain, and ad hoc everywhere else, so your copy is signed ad hoc. You can also run the development build with `swift run ReleasesApp`.
+
+A copy you build yourself opens without a warning on your Mac. If you send it to another Mac, macOS says it "could not verify Releases is free of malware". Click **Done**, then go to **System Settings → Privacy & Security** and click **Open Anyway**, or remove the quarantine flag in Terminal:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Releases.app
+```
 
 To build the release zip, run:
 
@@ -187,7 +183,7 @@ To build the release zip, run:
 ./Scripts/build-release.sh
 ```
 
-It checks that the app has both architectures and that its signature survives the zip, then writes `dist/Releases-1.3.0.zip`.
+It checks that the app has both architectures and that its signature survives the zip, notarizes the zip when the app is Developer ID signed, then writes `dist/Releases-1.4.0.zip`.
 
 ## Development
 
