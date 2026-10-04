@@ -1,16 +1,44 @@
 import ReleasesCore
 import SwiftUI
 
+/// The tabs of Latest Releases.
+enum HomeTab: CaseIterable {
+  case all, first, waiting
+
+  var title: String {
+    switch self {
+    case .all: "All Releases"
+    case .first: "First Releases"
+    case .waiting: "Waiting to Ship"
+    }
+  }
+
+  var symbol: String {
+    switch self {
+    case .all: "square.stack.3d.up.fill"
+    case .first: "sparkles"
+    case .waiting: "shippingbox.fill"
+    }
+  }
+
+  /// Nil for a neutral pill.
+  var tint: Color? {
+    switch self {
+    case .all: nil
+    case .first: .firstRelease
+    case .waiting: .orange
+    }
+  }
+}
+
 /// Every release of every project, newest first and grouped by day. Or only the first ones, grouped
-/// into today, yesterday, the last 7 days, then months.
+/// into today, yesterday, the last 7 days, then months. Or the projects waiting to ship.
 struct HomeView: View {
   @Environment(AppModel.self) private var model
 
   var body: some View {
     @Bindable var model = model
     let timeline = model.snapshots.timeline()
-    let firstOnly = model.showsFirstReleasesOnly
-    let entries = firstOnly ? timeline.filter(\.isFirstRelease) : timeline
 
     ScrollView {
       VStack(alignment: .leading, spacing: 26) {
@@ -18,42 +46,19 @@ struct HomeView: View {
           VStack(alignment: .leading, spacing: 4) {
             Text("Latest Releases")
               .font(.system(size: 28, weight: .bold))
-            Text(subtitle(entries))
+            Text(subtitle(timeline))
               .foregroundStyle(.secondary)
           }
           Spacer(minLength: 0)
-          ReleaseFilter(firstOnly: $model.showsFirstReleasesOnly)
+          HomeTabs(tab: $model.homeTab, waitingCount: waiting.count)
         }
 
         Stats(entries: timeline)
 
-        if !firstOnly, !waiting.isEmpty {
-          WaitingSection(snapshots: waiting)
-        }
-
-        if entries.isEmpty {
-          Card {
-            Text("No releases on GitHub yet. They show up here as soon as you publish one.")
-              .foregroundStyle(.secondary)
-          }
-        } else if firstOnly {
-          ForEach(entries.groupedByPeriod(), id: \.period) { group in
-            TimelineSection(
-              title: title(group.period),
-              detail: group.entries.count == 1 ? "1 app" : "\(group.entries.count) apps",
-              entries: group.entries,
-              firstReleasesOnly: true,
-              showsDay: group.period != .today && group.period != .yesterday
-            )
-          }
-        } else {
-          ForEach(days(entries), id: \.start) { group in
-            TimelineSection(
-              title: dayTitle(group.start),
-              detail: group.entries.count == 1 ? "1 release" : "\(group.entries.count) releases",
-              entries: group.entries
-            )
-          }
+        switch model.homeTab {
+        case .all: allReleases(timeline)
+        case .first: firstReleases(timeline.filter(\.isFirstRelease))
+        case .waiting: WaitingList(snapshots: waiting)
         }
       }
       .padding(.horizontal, 32)
@@ -83,11 +88,52 @@ struct HomeView: View {
     model.waitingToShip
   }
 
-  private func subtitle(_ entries: [TimelineEntry]) -> String {
-    if model.showsFirstReleasesOnly {
-      return entries.count == 1 ? "When your app launched." : "When each of your \(entries.count) apps launched, newest first."
+  @ViewBuilder
+  private func allReleases(_ entries: [TimelineEntry]) -> some View {
+    if entries.isEmpty {
+      NoReleases()
+    } else {
+      ForEach(days(entries), id: \.start) { group in
+        TimelineSection(
+          title: dayTitle(group.start),
+          detail: group.entries.count == 1 ? "1 release" : "\(group.entries.count) releases",
+          entries: group.entries
+        )
+      }
     }
-    return "Every release of your \(model.snapshots.count == 1 ? "project" : "\(model.snapshots.count) projects"), newest first."
+  }
+
+  @ViewBuilder
+  private func firstReleases(_ entries: [TimelineEntry]) -> some View {
+    if entries.isEmpty {
+      NoReleases()
+    } else {
+      ForEach(entries.groupedByPeriod(), id: \.period) { group in
+        TimelineSection(
+          title: title(group.period),
+          detail: group.entries.count == 1 ? "1 app" : "\(group.entries.count) apps",
+          entries: group.entries,
+          firstReleasesOnly: true,
+          showsDay: group.period != .today && group.period != .yesterday
+        )
+      }
+    }
+  }
+
+  private func subtitle(_ timeline: [TimelineEntry]) -> String {
+    switch model.homeTab {
+    case .all:
+      return "Every release of your \(model.snapshots.count == 1 ? "project" : "\(model.snapshots.count) projects"), newest first."
+    case .first:
+      let launches = timeline.count(where: \.isFirstRelease)
+      return launches == 1 ? "When your app launched." : "When each of your \(launches) apps launched, newest first."
+    case .waiting:
+      switch waiting.count {
+      case 0: return "Every project is up to date."
+      case 1: return "1 project has something new since its last release."
+      default: return "\(waiting.count) projects have something new since their last release."
+      }
+    }
   }
 
   private func days(_ entries: [TimelineEntry]) -> [(start: Date, entries: [TimelineEntry])] {
@@ -116,31 +162,30 @@ struct HomeView: View {
   }
 }
 
-/// All Releases or First Releases, two pills on one track. The selection slides over, and turns green for first releases.
-private struct ReleaseFilter: View {
-  @Binding var firstOnly: Bool
+/// The tabs as pills on one track. The selection slides over, green for first releases and orange for waiting to ship.
+private struct HomeTabs: View {
+  @Binding var tab: HomeTab
+  let waitingCount: Int
   @Namespace private var selection
 
   var body: some View {
     HStack(spacing: 2) {
-      FilterOption(title: "All Releases", symbol: "square.stack.3d.up.fill", tint: nil, isSelected: !firstOnly, selection: selection) {
-        firstOnly = false
-      }
-      FilterOption(title: "First Releases", symbol: "sparkles", tint: .firstRelease, isSelected: firstOnly, selection: selection) {
-        firstOnly = true
+      ForEach(HomeTab.allCases, id: \.self) { option in
+        TabPill(tab: option, count: option == .waiting ? waitingCount : 0, isSelected: tab == option, selection: selection) {
+          tab = option
+        }
       }
     }
     .padding(3)
     .background(Capsule().fill(.quaternary.opacity(0.5)))
-    .animation(.snappy(duration: 0.25), value: firstOnly)
+    .fixedSize()
+    .animation(.snappy(duration: 0.25), value: tab)
   }
 }
 
-private struct FilterOption: View {
-  let title: String
-  let symbol: String
-  /// Nil for a neutral pill.
-  let tint: Color?
+private struct TabPill: View {
+  let tab: HomeTab
+  let count: Int
   let isSelected: Bool
   let selection: Namespace.ID
   let action: () -> Void
@@ -150,12 +195,23 @@ private struct FilterOption: View {
 
   var body: some View {
     Button(action: action) {
-      Label {
-        Text(title)
-          .foregroundStyle(isSelected || isHovering ? Color.primary : .secondary)
-      } icon: {
-        Image(systemName: symbol)
-          .foregroundStyle(isSelected ? tint ?? .primary : .secondary)
+      HStack(spacing: 6) {
+        Label {
+          Text(tab.title)
+            .foregroundStyle(isSelected || isHovering ? Color.primary : .secondary)
+        } icon: {
+          Image(systemName: tab.symbol)
+            .foregroundStyle(isSelected ? tab.tint ?? .primary : .secondary)
+        }
+        if count > 0 {
+          Text(count, format: .number)
+            .font(.caption.weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(isSelected ? tab.tint ?? .primary : .secondary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 1)
+            .background(Capsule().fill(Color.primary.opacity(0.08)))
+        }
       }
       .font(.callout.weight(.medium))
       .padding(.horizontal, 12)
@@ -164,7 +220,7 @@ private struct FilterOption: View {
         if isSelected {
           Capsule()
             .fill(pill)
-            .shadow(color: .black.opacity(tint == nil && colorScheme == .light ? 0.12 : 0), radius: 1.5, y: 1)
+            .shadow(color: .black.opacity(tab.tint == nil && colorScheme == .light ? 0.12 : 0), radius: 1.5, y: 1)
             .matchedGeometryEffect(id: "selection", in: selection)
         }
       }
@@ -176,7 +232,7 @@ private struct FilterOption: View {
   }
 
   private var pill: Color {
-    if let tint { return tint.opacity(colorScheme == .dark ? 0.24 : 0.18) }
+    if let tint = tab.tint { return tint.opacity(colorScheme == .dark ? 0.24 : 0.18) }
     return colorScheme == .dark ? .white.opacity(0.14) : .white
   }
 }
@@ -194,7 +250,8 @@ private struct Stats: View {
     HStack(spacing: 12) {
       Stat(value: thisWeek, label: thisWeek == 1 ? "release this week" : "releases this week", symbol: "calendar", tint: .green)
       Stat(value: released, label: released == 1 ? "app released" : "apps released", symbol: "shippingbox.fill", tint: .blue)
-      Stat(value: downloads, label: downloads == 1 ? "download" : "downloads", symbol: "arrow.down.circle.fill", tint: .orange)
+      Stat(value: downloads, label: downloads == 1 ? "download from GitHub" : "downloads from GitHub", symbol: "arrow.down.circle.fill", tint: .orange)
+        .help("How many times the files of every release were downloaded from GitHub, since the first one. In-app updates count too.")
     }
   }
 }
@@ -226,28 +283,54 @@ private struct Stat: View {
   }
 }
 
-private struct WaitingSection: View {
+private struct NoReleases: View {
+  var body: some View {
+    Card {
+      Text("No releases on GitHub yet. They show up here as soon as you publish one.")
+        .foregroundStyle(.secondary)
+    }
+  }
+}
+
+/// The projects with commits or a newer version since their last release, each with what's waiting to go out.
+private struct WaitingList: View {
   @Environment(AppModel.self) private var model
   let snapshots: [ProjectSnapshot]
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      SectionTitle(title: "Waiting to ship", detail: "\(snapshots.count)")
-
+    if snapshots.isEmpty {
+      Card {
+        Text("Nothing is waiting to ship. New commits and version bumps show up here.")
+          .foregroundStyle(.secondary)
+      }
+    } else {
       RowGroup {
         ForEach(snapshots) { snapshot in
           RowButton {
             model.select(snapshot)
           } content: {
             HStack(spacing: 12) {
-              ProjectIcon(snapshot: snapshot, size: 32)
-              Text(snapshot.name)
-                .fontWeight(.semibold)
-              Label(snapshot.statusText, systemImage: snapshot.status.symbol)
-                .font(.callout)
-                .foregroundStyle(snapshot.status.color)
+              ProjectIcon(snapshot: snapshot, size: 36)
+
+              VStack(alignment: .leading, spacing: 3) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                  Text(snapshot.name)
+                    .fontWeight(.semibold)
+                  Label(snapshot.statusText, systemImage: snapshot.status.symbol)
+                    .font(.callout)
+                    .foregroundStyle(snapshot.status.color)
+                }
                 .lineLimit(1)
+                if let commits = snapshot.unreleasedCommits, !commits.isEmpty {
+                  Text(commits.map(\.subject).joined(separator: " · "))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                }
+              }
+
               Spacer(minLength: 8)
+
               Button("Create Release…") {
                 model.createRelease(snapshot)
               }
@@ -255,7 +338,7 @@ private struct WaitingSection: View {
             }
           }
           if snapshot.id != snapshots.last?.id {
-            Divider().padding(.leading, 58)
+            Divider().padding(.leading, 62)
           }
         }
       }

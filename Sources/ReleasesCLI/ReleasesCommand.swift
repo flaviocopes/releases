@@ -120,16 +120,24 @@ struct ReleasesCommand {
   }
 
   private static func list(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
-    let snapshots = try await tracker.refresh(maxAge: options.has("--refresh") ? nil : cacheAge)
+    let all = try await tracker.refresh(maxAge: options.has("--refresh") ? nil : cacheAge)
+    let waitingOnly = options.has("--waiting")
+    let snapshots = waitingOnly ? all.filter(\.isWaitingToShip) : all
 
     if options.has("--json") {
       try Output.json(snapshots.map { ProjectJSON($0, includeReleases: false) })
       return
     }
 
-    Output.table(snapshots)
-    reportFetchErrors(snapshots)
-    if !snapshots.isEmpty {
+    if waitingOnly, snapshots.isEmpty, !all.isEmpty {
+      print("Nothing is waiting to ship. Every project is up to date.")
+    } else {
+      Output.table(snapshots)
+    }
+    reportFetchErrors(all)
+    if waitingOnly, snapshots.count > 1 {
+      Output.hint("Run 'releases prompt --waiting --cursor' to release them all.")
+    } else if !snapshots.isEmpty {
       Output.hint("Run 'releases show <project>' to see every release.")
     }
   }

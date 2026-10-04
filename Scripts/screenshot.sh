@@ -42,7 +42,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 
 codesign --force --sign - "$APP"
-open -n "$APP" --args "$ROOT/docs" -AppleLocale en_US -AppleLanguages '(en)'
+open -n "$APP" --args "$ROOT/docs" -AppleLocale en_US -AppleLanguages '(en)' -AppleShowScrollBars WhenScrolling
 sleep 1
 while pgrep -f "Releases Screenshot.app/Contents/MacOS" >/dev/null; do sleep 1; done
 ls -la docs/screenshot-*.png

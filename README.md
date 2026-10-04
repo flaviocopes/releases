@@ -32,10 +32,10 @@ defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
 
 ## Features
 
-- **Latest Releases** puts every release of every project in one timeline, grouped by day, with its downloads and what changed
+- **Latest Releases** puts every release of every project in one timeline, grouped by day, with what changed and how many times its files were downloaded from GitHub
 - Each app's first release stands out in green. Switch to **First Releases** to see when you launched each app, today, yesterday, in the last 7 days, then month by month
 - What changed comes from the project's `CHANGELOG.md`, or from the "What's new" part of the release notes on GitHub
-- **Waiting to ship** lists the projects with commits since their last release, or with a version newer than the last release
+- The **Waiting to Ship** tab lists the projects with commits since their last release, or with a version newer than the last release, and the commits waiting to go out
 - Each project shows its version and the file it comes from, its branch, the commits you haven't pushed or released, and every release with its downloads
 - **Create Release** suggests the next version, writes the prompt for your coding agent, and opens it in Cursor. Nothing runs until you send it. **Create Releases** does it for every project waiting to ship
 - Add a project by dropping its folder on the window, or with `releases add`. **Add More…** lists the apps and command-line tools next to your projects that aren't in the list yet
@@ -48,7 +48,7 @@ defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png" />
-  <img src="docs/screenshot-light.png" alt="The Releases window on Latest Releases, with two projects waiting to ship" />
+  <img src="docs/screenshot-light.png" alt="The Releases window on Latest Releases, with the latest releases of five projects" />
 </picture>
 
 ## A project's page
@@ -69,7 +69,7 @@ Releases reads the version from the first of these it finds:
 
 ## Creating a release
 
-Click **Create Release…** on a project, or next to it in **Waiting to ship**. Pick the version, or bump the latest release with the **Patch**, **Minor** and **Major** buttons, and add anything else the agent should know.
+Click **Create Release…** on a project, or next to it in the **Waiting to Ship** tab. Pick the version, or bump the latest release with the **Patch**, **Minor** and **Major** buttons, and add anything else the agent should know.
 
 **Continue in Cursor** opens the project in Cursor and puts the prompt in the chat. Cursor never runs it on its own, so you can read it and send it when you're ready. **Copy Prompt** copies it for any other agent.
 
@@ -109,7 +109,7 @@ Pass another folder to install it somewhere else, like `./Scripts/install-cli.sh
 | Command | What it does |
 | --- | --- |
 | `releases add <folder>` | Adds projects to the list |
-| `releases list` | Every project with its version, latest release and status |
+| `releases list` | Every project with its version, latest release and status, or only the ones waiting to ship with `--waiting` |
 | `releases recent` | The latest releases across all projects, or only each app's first one with `--first` |
 | `releases show <project>` | A project and all its releases |
 | `releases discover` | The apps on this Mac that aren't in the list, like Add Projects in the app |

@@ -24,8 +24,12 @@ enum Commands {
     CommandSpec(
       name: "list",
       summary: "List the projects, newest release first.",
-      usage: "releases list [--refresh] [--json]",
-      options: [refresh, json],
+      usage: "releases list [--waiting] [--refresh] [--json]",
+      options: [
+        Option(name: "--waiting", help: "Only the projects waiting to ship, with commits or a newer version since their last release."),
+        refresh,
+        json
+      ],
       details: "Releases fetched in the last 5 minutes come from the cache.",
       aliases: ["ls"]
     ),
@@ -186,6 +190,7 @@ enum Commands {
       Get started:
         releases add ~/dev/soundscape      Track a project.
         releases list                      See every project and its latest release.
+        releases list --waiting            See the projects waiting to ship.
         releases recent                    See the latest releases across all projects.
         releases recent --first            See when each app launched.
         releases discover                  See the apps on this Mac that aren't released yet.
