@@ -48,12 +48,17 @@ enum Commands {
     CommandSpec(
       name: "downloads",
       summary: "Show how many times each project's releases were downloaded from GitHub.",
-      usage: "releases downloads [<project>] [--refresh] [--json]",
-      options: [refresh, json],
+      usage: "releases downloads [<project>] [--by-day] [--refresh] [--json]",
+      options: [
+        Option(name: "--by-day", help: "The downloads of each day, newest first, with the total so far. With --json, each app's too."),
+        refresh,
+        json
+      ],
       details: """
         In-app updates download the same files, so they count too. GitHub only keeps the total
         so far, so the app and this command save it every day they fetch the releases. The last
-        7 days show up once there's a count from a week ago.
+        7 days show up once there's a count from a week ago, and the days before the first count
+        are an estimate, spread evenly from each launch.
         With a project, it lists each release and the counts saved so far.
         """
     ),

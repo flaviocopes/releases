@@ -122,6 +122,30 @@ enum Output {
     }
   }
 
+  /// The last 14 days, newest first: the downloads of each day and the total so far. Estimates start with ~.
+  static func downloadsByDay(_ series: [DownloadSeries]) {
+    let total = series.total
+    let days = total.perDay()
+    let shown = total.indices.reversed().prefix(14)
+    var rows = shown.map { index in
+      [
+        date(total[index].day),
+        (days[index].isEstimate ? "~" : "") + "+\(days[index].downloads.formatted())",
+        (total[index].isEstimate ? "~" : "") + total[index].downloads.formatted()
+      ]
+    }
+    if isTerminal {
+      rows.insert(["DAY", "DOWNLOADS", "TOTAL"], at: 0)
+    }
+    columns(rows)
+    if shown.contains(where: { days[$0].isEstimate }) {
+      hint("~ is an estimate. GitHub only keeps the total so far, so the days before Releases saved its first count are spread evenly from each launch.")
+    }
+    if total.count > shown.count {
+      hint("Showing the last \(shown.count) of \(total.count) days. Use --json to see them all.")
+    }
+  }
+
   private static func week(_ downloads: Int?) -> String {
     downloads.map { "+\($0.formatted())" } ?? "-"
   }
@@ -282,6 +306,38 @@ struct DownloadsJSON: Encodable {
     lastSevenDays = snapshots.downloads(since: weekAgo)
     trackedSince = snapshots.downloadsTrackedSince
     projects = snapshots.map { ProjectDownloadsJSON($0, weekAgo: weekAgo) }
+  }
+}
+
+/// The JSON shape of one day in `releases downloads --by-day`, newest first.
+struct DayDownloadsJSON: Encodable {
+  struct AppDownloads: Encodable {
+    /// The app's name, or "Other" for the apps with fewer than 10 downloads.
+    var name: String
+    var downloads: Int
+  }
+
+  var day: Date
+  var downloads: Int
+  var total: Int
+  var isEstimate: Bool
+  var apps: [AppDownloads]
+
+  static func days(_ series: [DownloadSeries]) -> [DayDownloadsJSON] {
+    let total = series.total
+    let days = total.perDay()
+    let apps = series.map { ($0.name, $0.points.perDay()) }
+    return total.indices.reversed().map { index in
+      DayDownloadsJSON(
+        day: total[index].day,
+        downloads: days[index].downloads,
+        total: total[index].downloads,
+        isEstimate: days[index].isEstimate,
+        apps: apps.compactMap { name, points in
+          points[index].downloads > 0 ? AppDownloads(name: name, downloads: points[index].downloads) : nil
+        }
+      )
+    }
   }
 }
 

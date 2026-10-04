@@ -50,7 +50,9 @@ struct HomeView: View {
               .foregroundStyle(.secondary)
           }
           Spacer(minLength: 0)
-          HomeTabs(tab: $model.homeTab, waitingCount: waiting.count)
+          PillPicker(selection: $model.homeTab, options: HomeTab.allCases.map { tab in
+            PillOption(value: tab, title: tab.title, symbol: tab.symbol, tint: tab.tint, count: tab == .waiting ? waiting.count : 0)
+          })
         }
 
         Stats(entries: timeline)
@@ -159,81 +161,6 @@ struct HomeView: View {
       return day.formatted(.dateTime.weekday(.wide).month(.wide).day())
     }
     return day.formatted(.dateTime.month(.wide).day().year())
-  }
-}
-
-/// The tabs as pills on one track. The selection slides over, green for first releases and orange for waiting to ship.
-private struct HomeTabs: View {
-  @Binding var tab: HomeTab
-  let waitingCount: Int
-  @Namespace private var selection
-
-  var body: some View {
-    HStack(spacing: 2) {
-      ForEach(HomeTab.allCases, id: \.self) { option in
-        TabPill(tab: option, count: option == .waiting ? waitingCount : 0, isSelected: tab == option, selection: selection) {
-          tab = option
-        }
-      }
-    }
-    .padding(3)
-    .background(Capsule().fill(.quaternary.opacity(0.5)))
-    .fixedSize()
-    .animation(.snappy(duration: 0.25), value: tab)
-  }
-}
-
-private struct TabPill: View {
-  let tab: HomeTab
-  let count: Int
-  let isSelected: Bool
-  let selection: Namespace.ID
-  let action: () -> Void
-
-  @Environment(\.colorScheme) private var colorScheme
-  @State private var isHovering = false
-
-  var body: some View {
-    Button(action: action) {
-      HStack(spacing: 6) {
-        Label {
-          Text(tab.title)
-            .foregroundStyle(isSelected || isHovering ? Color.primary : .secondary)
-        } icon: {
-          Image(systemName: tab.symbol)
-            .foregroundStyle(isSelected ? tab.tint ?? .primary : .secondary)
-        }
-        if count > 0 {
-          Text(count, format: .number)
-            .font(.caption.weight(.semibold))
-            .monospacedDigit()
-            .foregroundStyle(isSelected ? tab.tint ?? .primary : .secondary)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 1)
-            .background(Capsule().fill(Color.primary.opacity(0.08)))
-        }
-      }
-      .font(.callout.weight(.medium))
-      .padding(.horizontal, 12)
-      .padding(.vertical, 6)
-      .background {
-        if isSelected {
-          Capsule()
-            .fill(pill)
-            .shadow(color: .black.opacity(tab.tint == nil && colorScheme == .light ? 0.12 : 0), radius: 1.5, y: 1)
-            .matchedGeometryEffect(id: "selection", in: selection)
-        }
-      }
-      .contentShape(Capsule())
-    }
-    .buttonStyle(.plain)
-    .onHover { isHovering = $0 }
-    .accessibilityAddTraits(isSelected ? .isSelected : [])
-  }
-
-  private var pill: Color {
-    if let tint = tab.tint { return tint.opacity(colorScheme == .dark ? 0.24 : 0.18) }
-    return colorScheme == .dark ? .white.opacity(0.14) : .white
   }
 }
 

@@ -64,9 +64,18 @@ struct DownloadsTests {
     #expect(list.projects.first?.downloadHistory == [DownloadSample(date: date(10, 4, 9), downloads: 42)])
   }
 
+  private func tiny(_ name: String, downloads: Int) -> ProjectSnapshot {
+    var project = TrackedProject(path: "/Users/flavio/dev/\(name.lowercased())")
+    project.releases = [release("v1.0.0", date(10, 3), downloads: downloads)]
+    project.releasesFetchedAt = date(10, 4, 18)
+    return ProjectSnapshot(project: project, local: LocalProject(name: name))
+  }
+
   @Test
   func estimatesTheDaysBeforeTheFirstCount() {
-    let points = soundscape().downloadsByDay(through: date(10, 4, 19), calendar: Self.utc)
+    let series = [soundscape()].downloadSeries(through: date(10, 4, 19), calendar: Self.utc)
+    #expect(series.map(\.name) == ["Soundscape"])
+    let points = series[0].points
 
     #expect(points.count == 15)
     #expect(points.first == DownloadPoint(day: date(9, 20), downloads: 5, isEstimate: true))
@@ -84,9 +93,33 @@ struct DownloadsTests {
   }
 
   @Test
+  func countsTheDownloadsOfEachDay() {
+    let days = [soundscape()].downloadSeries(through: date(10, 4, 19), calendar: Self.utc)[0].points.perDay()
+
+    #expect(days.first == DownloadPoint(day: date(9, 20), downloads: 5, isEstimate: true))
+    #expect(days.suffix(4) == [
+      DownloadPoint(day: date(10, 1), downloads: 4, isEstimate: true),
+      DownloadPoint(day: date(10, 2), downloads: 0, isEstimate: false),
+      DownloadPoint(day: date(10, 3), downloads: 30, isEstimate: false),
+      DownloadPoint(day: date(10, 4), downloads: 0, isEstimate: false)
+    ])
+  }
+
+  @Test
+  func addsUpTheAppsWithFewDownloadsAsOther() {
+    let series = [tiny("Blueprint", downloads: 2), soundscape(), tiny("Postdeck", downloads: 4), noteRepo()]
+      .downloadSeries(through: date(10, 4, 19), calendar: Self.utc)
+    #expect(series.map(\.name) == ["Soundscape", "NoteRepo", "Other"])
+    #expect(series[2].points.last?.downloads == 6)
+
+    let alone = [soundscape(), tiny("Postdeck", downloads: 4)].downloadSeries(through: date(10, 4, 19), calendar: Self.utc)
+    #expect(alone.map(\.name) == ["Soundscape", "Postdeck"])
+  }
+
+  @Test
   func addsUpEveryProject() {
     let projects = [soundscape(), noteRepo()]
-    let points = projects.downloadsByDay(through: date(10, 4, 19), calendar: Self.utc)
+    let points = projects.downloadSeries(through: date(10, 4, 19), calendar: Self.utc).total
 
     #expect(points.first == DownloadPoint(day: date(9, 20), downloads: 5, isEstimate: true))
     #expect(points[11] == DownloadPoint(day: date(10, 1), downloads: 100, isEstimate: false))

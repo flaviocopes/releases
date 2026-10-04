@@ -2,11 +2,15 @@ import Charts
 import ReleasesCore
 import SwiftUI
 
+/// The chart shows the downloads of each day, or the total so far.
+private enum ChartMode {
+  case perDay, total
+}
+
 /// How many times the releases were downloaded from GitHub: in total, over time, and for each app.
 struct DownloadsView: View {
   @Environment(AppModel.self) private var model
-  /// The app in the chart, or nil for every app together.
-  @State private var chartedID: ProjectSnapshot.ID?
+  @State private var chartMode = ChartMode.perDay
 
   var body: some View {
     let released = model.snapshots
@@ -66,8 +70,7 @@ struct DownloadsView: View {
   }
 
   private func chart(_ released: [ProjectSnapshot]) -> some View {
-    let charted = released.first { $0.id == chartedID }
-    let points = charted?.downloadsByDay() ?? released.downloadsByDay()
+    let series = released.downloadSeries()
 
     return Card {
       VStack(alignment: .leading, spacing: 14) {
@@ -75,37 +78,33 @@ struct DownloadsView: View {
           Text("Over time")
             .font(.headline)
           Spacer()
-          Picker("App", selection: $chartedID) {
-            Text("All Apps").tag(ProjectSnapshot.ID?.none)
-            Divider()
-            ForEach(released) { snapshot in
-              Text(snapshot.name).tag(Optional(snapshot.id))
-            }
-          }
-          .labelsHidden()
-          .pickerStyle(.menu)
-          .fixedSize()
+          PillPicker(selection: $chartMode, options: [
+            PillOption(value: .perDay, title: "Per Day", symbol: "chart.bar.fill"),
+            PillOption(value: .total, title: "Total", symbol: "chart.line.uptrend.xyaxis")
+          ])
         }
 
-        DownloadsChart(points: points)
-          .frame(height: 220)
+        DownloadsChart(series: series, perDay: chartMode == .perDay)
+          .frame(height: 260)
 
-        if points.contains(where: \.isEstimate) {
-          Text(caption(released))
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-        }
+        Text(caption(released, series: series))
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
       }
     }
   }
 
-  private func caption(_ released: [ProjectSnapshot]) -> String {
-    let estimate = "The dashed part is an estimate, a straight line from the launch to the first count."
-    guard let since = released.downloadsTrackedSince else {
-      return "GitHub only keeps the total so far, so Releases saves it every day. \(estimate)"
+  private func caption(_ released: [ProjectSnapshot], series: [DownloadSeries]) -> String {
+    var sentences: [String] = []
+    if series.last?.name == "Other" {
+      sentences.append("Other adds up the apps with fewer than 10 downloads.")
     }
-    return "GitHub only keeps the total so far, so Releases saves it every day, since \(since.formatted(.dateTime.month(.wide).day())). \(estimate)"
+    if series.total.contains(where: \.isEstimate) {
+      let since = released.downloadsTrackedSince.map { ", since \($0.formatted(.dateTime.month(.wide).day()))" } ?? ""
+      sentences.append("GitHub only keeps the total so far, so Releases saves it every day\(since). The faded bars before that are an estimate, spread evenly from each launch.")
+    }
+    return sentences.joined(separator: " ")
   }
 
   private func apps(_ released: [ProjectSnapshot], weekAgo: Date) -> some View {
@@ -130,84 +129,107 @@ struct DownloadsView: View {
   }
 }
 
-/// The downloads so far, day by day. The line is dashed where it's an estimate, and hovering shows a day's count.
+/// The downloads of each day, or the total so far, in bars stacked by app. Estimated days are faded,
+/// and hovering a day shows its numbers.
 private struct DownloadsChart: View {
-  let points: [DownloadPoint]
+  let series: [DownloadSeries]
+  let perDay: Bool
 
   @State private var hoveredDay: Date?
 
+  private static let palette: [Color] = [.orange, .blue, .green, .purple, .pink, .teal, .indigo, .yellow, .mint, .red, .cyan, .brown]
+
   var body: some View {
-    let hovered = hoveredDay.flatMap { day in points.first { Calendar.current.isDate($0.day, inSameDayAs: day) } }
+    let shown = series.map { DownloadSeries(name: $0.name, points: perDay ? $0.points.perDay() : $0.points) }
+    let names = shown.map(\.name)
+    let hoveredIndex = hoveredDay.flatMap { day in
+      shown.first?.points.firstIndex { Calendar.current.isDate($0.day, inSameDayAs: day) }
+    }
 
     Chart {
-      ForEach(points, id: \.day) { point in
-        AreaMark(x: .value("Day", point.day, unit: .day), y: .value("Downloads", point.downloads))
-          .foregroundStyle(LinearGradient(colors: [.orange.opacity(0.3), .orange.opacity(0.02)], startPoint: .top, endPoint: .bottom))
+      if let hoveredIndex, let day = shown.first?.points[hoveredIndex].day {
+        RectangleMark(x: .value("Day", day, unit: .day))
+          .foregroundStyle(Color.primary.opacity(0.07))
+          .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
+            DayBreakdown(day: day, perDay: perDay, rows: shown.compactMap { series in
+              let point = series.points[hoveredIndex]
+              guard point.downloads > 0 else { return nil }
+              return DayBreakdown.Row(name: series.name, downloads: point.downloads, color: color(for: series.name, in: names), isEstimate: point.isEstimate)
+            })
+          }
       }
 
-      ForEach(runs) { run in
-        ForEach(run.points, id: \.day) { point in
-          LineMark(x: .value("Day", point.day, unit: .day), y: .value("Downloads", point.downloads), series: .value("Part", run.id))
-            .foregroundStyle(.orange)
-            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round, dash: run.isEstimate ? [3, 4] : []))
+      ForEach(shown, id: \.name) { series in
+        ForEach(series.points, id: \.day) { point in
+          BarMark(x: .value("Day", point.day, unit: .day), y: .value("Downloads", point.downloads))
+            .foregroundStyle(by: .value("App", series.name))
+            .opacity(point.isEstimate ? 0.4 : 1)
         }
       }
-
-      if let hovered {
-        RuleMark(x: .value("Day", hovered.day, unit: .day))
-          .foregroundStyle(Color.primary.opacity(0.18))
-          .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))) {
-            VStack(spacing: 1) {
-              Text(hovered.downloads, format: .number)
-                .font(.headline)
-                .monospacedDigit()
-              Text(hovered.day, format: .dateTime.month(.abbreviated).day())
-                .font(.caption)
-                .foregroundStyle(.secondary)
-              if hovered.isEstimate {
-                Text("estimate")
-                  .font(.caption2)
-                  .foregroundStyle(.tertiary)
-              }
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(.background).shadow(color: .black.opacity(0.15), radius: 3, y: 1))
-          }
-        PointMark(x: .value("Day", hovered.day, unit: .day), y: .value("Downloads", hovered.downloads))
-          .foregroundStyle(.orange)
-      } else if let last = points.last {
-        PointMark(x: .value("Day", last.day, unit: .day), y: .value("Downloads", last.downloads))
-          .foregroundStyle(.orange)
-      }
     }
+    .chartForegroundStyleScale(domain: names, range: names.map { color(for: $0, in: names) })
+    .chartLegend(position: .bottom, alignment: .leading, spacing: 12)
     .chartXSelection(value: $hoveredDay)
-    .chartXScale(range: .plotDimension(startPadding: 0, endPadding: 18))
+    .chartXScale(range: .plotDimension(startPadding: 0, endPadding: 16))
     .chartYAxis {
       AxisMarks(position: .leading)
     }
   }
 
-  private struct Run: Identifiable {
-    var id: String
+  private func color(for name: String, in names: [String]) -> Color {
+    if name == "Other" { return .gray }
+    return Self.palette[(names.firstIndex(of: name) ?? 0) % Self.palette.count]
+  }
+}
+
+/// A day's downloads, app by app, the most first.
+private struct DayBreakdown: View {
+  struct Row: Identifiable {
+    var name: String
+    var downloads: Int
+    var color: Color
     var isEstimate: Bool
-    var points: [DownloadPoint]
+    var id: String { name }
   }
 
-  /// Days in a row that are all estimates, or all counted. Each run also takes the next run's first day, so the line has no gaps.
-  private var runs: [Run] {
-    var runs: [Run] = []
-    for point in points {
-      if let last = runs.last, last.isEstimate == point.isEstimate {
-        runs[runs.count - 1].points.append(point)
-      } else {
-        if !runs.isEmpty {
-          runs[runs.count - 1].points.append(point)
+  let day: Date
+  let perDay: Bool
+  let rows: [Row]
+
+  var body: some View {
+    let total = rows.reduce(0) { $0 + $1.downloads }
+
+    VStack(alignment: .leading, spacing: 4) {
+      HStack(alignment: .firstTextBaseline, spacing: 6) {
+        Text(perDay ? "+\(total.formatted())" : total.formatted())
+          .font(.headline)
+          .monospacedDigit()
+        Text(day, format: .dateTime.month(.abbreviated).day())
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+      ForEach(rows.sorted { $0.downloads > $1.downloads }) { row in
+        HStack(spacing: 6) {
+          Circle()
+            .fill(row.color)
+            .frame(width: 7, height: 7)
+          Text(row.name)
+            .lineLimit(1)
+          Spacer(minLength: 12)
+          Text(row.downloads, format: .number)
+            .monospacedDigit()
         }
-        runs.append(Run(id: "\(runs.count)", isEstimate: point.isEstimate, points: [point]))
+        .font(.caption)
+      }
+      if rows.contains(where: \.isEstimate) {
+        Text("Estimate")
+          .font(.caption2)
+          .foregroundStyle(.tertiary)
       }
     }
-    return runs
+    .padding(8)
+    .frame(width: 190)
+    .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.background).shadow(color: .black.opacity(0.15), radius: 3, y: 1))
   }
 }
 

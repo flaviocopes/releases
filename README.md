@@ -33,7 +33,7 @@ defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
 ## Features
 
 - **Latest Releases** puts every release of every project in one timeline, grouped by day, with what changed and how many times its files were downloaded from GitHub
-- **Downloads** shows the total, the last 7 days, and each app's downloads, with a chart of how they grew. GitHub only keeps the total so far, so Releases saves it every day
+- **Downloads** shows the total, the last 7 days, and each app's downloads, with a chart of the downloads of each day or the total so far, app by app. GitHub only keeps the total so far, so Releases saves it every day
 - Each app's first release stands out in green. Switch to **First Releases** to see when you launched each app, today, yesterday, in the last 7 days, then month by month
 - What changed comes from the project's `CHANGELOG.md`, or from the "What's new" part of the release notes on GitHub
 - The **Waiting to Ship** tab lists the projects with commits since their last release, or with a version newer than the last release, and the commits waiting to go out
@@ -112,7 +112,7 @@ Pass another folder to install it somewhere else, like `./Scripts/install-cli.sh
 | `releases add <folder>` | Adds projects to the list |
 | `releases list` | Every project with its version, latest release and status, or only the ones waiting to ship with `--waiting` |
 | `releases recent` | The latest releases across all projects, or only each app's first one with `--first` |
-| `releases downloads` | How many times each project was downloaded, in total and in the last 7 days, or each release of one project |
+| `releases downloads` | How many times each project was downloaded, in total and in the last 7 days, or each release of one project. `--by-day` shows the downloads of each day |
 | `releases show <project>` | A project and all its releases |
 | `releases discover` | The apps on this Mac that aren't in the list, like Add Projects in the app |
 | `releases hide <project>` | Leaves a project out of Add Projects |

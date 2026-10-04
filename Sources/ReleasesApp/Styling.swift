@@ -176,6 +176,93 @@ struct Stat: View {
   }
 }
 
+struct PillOption<Value: Hashable> {
+  var value: Value
+  var title: String
+  var symbol: String
+  /// Nil for a neutral pill.
+  var tint: Color?
+  /// Shown in a badge when it's more than zero.
+  var count = 0
+}
+
+/// Options as pills on one track, instead of a stock segmented control. The selection slides over.
+struct PillPicker<Value: Hashable>: View {
+  @Binding var selection: Value
+  let options: [PillOption<Value>]
+  @Namespace private var namespace
+
+  var body: some View {
+    HStack(spacing: 2) {
+      ForEach(options, id: \.value) { option in
+        PillButton(title: option.title, symbol: option.symbol, tint: option.tint, count: option.count, isSelected: selection == option.value, namespace: namespace) {
+          selection = option.value
+        }
+      }
+    }
+    .padding(3)
+    .background(Capsule().fill(.quaternary.opacity(0.5)))
+    .fixedSize()
+    .animation(.snappy(duration: 0.25), value: selection)
+  }
+}
+
+private struct PillButton: View {
+  let title: String
+  let symbol: String
+  let tint: Color?
+  let count: Int
+  let isSelected: Bool
+  let namespace: Namespace.ID
+  let action: () -> Void
+
+  @Environment(\.colorScheme) private var colorScheme
+  @State private var isHovering = false
+
+  var body: some View {
+    Button(action: action) {
+      HStack(spacing: 6) {
+        Label {
+          Text(title)
+            .foregroundStyle(isSelected || isHovering ? Color.primary : .secondary)
+        } icon: {
+          Image(systemName: symbol)
+            .foregroundStyle(isSelected ? tint ?? .primary : .secondary)
+        }
+        if count > 0 {
+          Text(count, format: .number)
+            .font(.caption.weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(isSelected ? tint ?? .primary : .secondary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 1)
+            .background(Capsule().fill(Color.primary.opacity(0.08)))
+        }
+      }
+      .font(.callout.weight(.medium))
+      .padding(.horizontal, 12)
+      .padding(.vertical, 6)
+      .background {
+        if isSelected {
+          Capsule()
+            .fill(pill)
+            .shadow(color: .black.opacity(tint == nil && colorScheme == .light ? 0.12 : 0), radius: 1.5, y: 1)
+            .matchedGeometryEffect(id: "selection", in: namespace)
+        }
+      }
+      .contentShape(Capsule())
+    }
+    .buttonStyle(.plain)
+    .onHover { isHovering = $0 }
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
+  }
+
+  private var pill: Color {
+    if let tint { return tint.opacity(colorScheme == .dark ? 0.24 : 0.18) }
+    return colorScheme == .dark ? .white.opacity(0.14) : .white
+  }
+}
+
 /// Rows stacked in one rounded box, like a grouped list.
 struct RowGroup<Content: View>: View {
   @ViewBuilder let content: Content

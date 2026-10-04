@@ -177,9 +177,21 @@ struct ReleasesCommand {
   private static func downloads(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
     let snapshots = try await tracker.refresh(maxAge: options.has("--refresh") ? nil : cacheAge)
     let weekAgo = Date.now.addingTimeInterval(-7 * 86_400)
+    let project = try options.positionals.first.map { try snapshots.project(matching: $0) }
 
-    if let identifier = options.positionals.first {
-      let snapshot = try snapshots.project(matching: identifier)
+    if options.has("--by-day") {
+      let series = (project.map { [$0] } ?? snapshots).downloadSeries()
+      if options.has("--json") {
+        try Output.json(DayDownloadsJSON.days(series))
+      } else if series.isEmpty {
+        print("No releases on GitHub yet.")
+      } else {
+        Output.downloadsByDay(series)
+      }
+      return
+    }
+
+    if let snapshot = project {
       if options.has("--json") {
         try Output.json(ProjectDownloadsJSON(snapshot, weekAgo: weekAgo))
       } else {
