@@ -47,6 +47,14 @@ struct ProjectSnapshotTests {
   }
 
   @Test
+  func waitingToShipMeansReleasedWithSomethingNew() {
+    #expect(snapshot(releases: [release("v1.0.2")], commits: [Commit(hash: "a1b2c3d", subject: "Fix")]).isWaitingToShip)
+    #expect(snapshot(version: "1.1.0", releases: [release("v1.0.2")], commits: []).isWaitingToShip)
+    #expect(!snapshot(releases: [release("v1.0.2")], commits: []).isWaitingToShip)
+    #expect(!snapshot(version: "1.0.0", releases: []).isWaitingToShip)
+  }
+
+  @Test
   func statusText() {
     let commits = [Commit(hash: "a1b2c3d", subject: "Fix"), Commit(hash: "e4f5a6b", subject: "Loop")]
     #expect(snapshot(releases: [release("v1.0.2")], commits: commits).statusText == "2 commits since v1.0.2")

@@ -31,6 +31,8 @@ final class AppModel {
   var lastRefresh: Date?
   var errorMessage: String?
   var releaseDraft: ReleaseDraft?
+  /// The sheet that releases every project waiting to ship at once.
+  var showsCreateReleases = false
   var showsAddProjects = false
   /// True while the app looks for projects on disk.
   private(set) var isDiscovering = false
@@ -219,6 +221,29 @@ final class AppModel {
 
   func createRelease(_ snapshot: ProjectSnapshot, version: SemanticVersion? = nil, notes: String = "") {
     releaseDraft = ReleaseDraft(snapshot: snapshot, version: version, notes: notes)
+  }
+
+  var waitingToShip: [ProjectSnapshot] {
+    snapshots.filter(\.isWaitingToShip)
+  }
+
+  /// One project gets the usual sheet, more get the one that releases them all.
+  func createReleasesForWaiting() {
+    let waiting = waitingToShip
+    if waiting.count == 1 {
+      createRelease(waiting[0])
+    } else if !waiting.isEmpty {
+      showsCreateReleases = true
+    }
+  }
+
+  /// Opens each project in its own Cursor window with its prompt, one after the other.
+  func startReleases(_ releases: [(snapshot: ProjectSnapshot, prompt: String)]) async {
+    do {
+      try await Cursor.start(releases.map { (prompt: $0.prompt, folder: $0.snapshot.project.url) })
+    } catch {
+      errorMessage = error.localizedDescription
+    }
   }
 
   /// Opens Cursor with the prompt. A project that isn't in the list yet gets added first.

@@ -38,6 +38,9 @@ struct ContentView: View {
     .sheet(item: $model.releaseDraft) { draft in
       CreateReleaseSheet(draft: draft)
     }
+    .sheet(isPresented: $model.showsCreateReleases) {
+      CreateReleasesSheet(snapshots: model.waitingToShip)
+    }
     .sheet(isPresented: $model.showsAddProjects) {
       AddProjectsSheet()
     }

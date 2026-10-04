@@ -67,11 +67,24 @@ struct HomeView: View {
     }
     .background(.background)
     .navigationTitle("Latest Releases")
+    .toolbar {
+      ToolbarItemGroup {
+        Spacer()
+        if !waiting.isEmpty {
+          Button {
+            model.createReleasesForWaiting()
+          } label: {
+            Label(waiting.count == 1 ? "Create Release…" : "Create \(waiting.count) Releases…", systemImage: "shippingbox")
+          }
+          .labelStyle(.titleAndIcon)
+          .help("Release every project waiting to ship, each in its own Cursor window")
+        }
+      }
+    }
   }
 
-  /// Projects with work that isn't in a release yet.
   private var waiting: [ProjectSnapshot] {
-    model.snapshots.filter { $0.status == .unreleasedChanges || $0.status == .readyToRelease }
+    model.waitingToShip
   }
 
   private func subtitle(_ entries: [TimelineEntry]) -> String {

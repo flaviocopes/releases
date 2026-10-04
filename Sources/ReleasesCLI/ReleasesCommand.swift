@@ -270,6 +270,11 @@ struct ReleasesCommand {
   }
 
   private static func prompt(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    if options.has("--waiting") {
+      try await promptWaiting(options, tracker)
+      return
+    }
+
     let (snapshot, isTracked) = try await resolve(identifier(options, command: "prompt"), maxAge: cacheAge, tracker)
     let version = try requestedVersion(options, for: snapshot) ?? snapshot.suggestedVersion
     let text = ReleasePrompt.make(for: snapshot, version: version, notes: options.value("--notes") ?? "")
@@ -294,6 +299,44 @@ struct ReleasesCommand {
       print("Opened \(snapshot.name) in Cursor. Review the prompt in the chat and send it.")
     } else {
       print(text)
+    }
+  }
+
+  private static func promptWaiting(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    if let project = options.positionals.first {
+      throw CLIError.conflictingOptions(project, "--waiting")
+    }
+    if options.value("--version") != nil {
+      throw CLIError.conflictingOptions("--version", "--waiting")
+    }
+
+    let waiting = try await tracker.refresh(maxAge: cacheAge).filter(\.isWaitingToShip)
+    let releases = try waiting.map { snapshot in
+      let version = try requestedVersion(options, for: snapshot) ?? snapshot.suggestedVersion
+      return (snapshot: snapshot, version: version, prompt: ReleasePrompt.make(for: snapshot, version: version, notes: options.value("--notes") ?? ""))
+    }
+
+    if options.has("--cursor"), !releases.isEmpty {
+      try await Cursor.start(releases.map { (prompt: $0.prompt, folder: $0.snapshot.project.url) })
+    }
+
+    if options.has("--json") {
+      try Output.json(releases.map { release in
+        PromptJSON(
+          project: release.snapshot.name,
+          path: release.snapshot.project.path,
+          version: release.version.description,
+          tag: release.version.tag,
+          prompt: release.prompt,
+          openedInCursor: options.has("--cursor")
+        )
+      })
+    } else if releases.isEmpty {
+      print("Nothing is waiting to ship.")
+    } else if options.has("--cursor") {
+      print("Opened \(releases.map(\.snapshot.name).joined(separator: ", ")) in Cursor, each in its own window. Review each prompt in its chat and send it.")
+    } else {
+      print(releases.map(\.prompt).joined(separator: "\n\n---\n\n"))
     }
   }
 

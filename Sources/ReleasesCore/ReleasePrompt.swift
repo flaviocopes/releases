@@ -121,4 +121,15 @@ public enum Cursor {
       throw CursorError.couldNotOpen
     }
   }
+
+  /// Each release in its own window. Cursor needs the pause to take a prompt before the next
+  /// folder comes to the front, or the prompt lands in the wrong window.
+  public static func start(_ releases: [(prompt: String, folder: URL)], pause: Duration = .seconds(2)) async throws {
+    for (index, release) in releases.enumerated() {
+      if index > 0 {
+        try await Task.sleep(for: pause)
+      }
+      try await start(prompt: release.prompt, in: release.folder)
+    }
+  }
 }

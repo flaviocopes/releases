@@ -92,6 +92,11 @@ public struct ProjectSnapshot: Identifiable, Hashable, Sendable {
     }
   }
 
+  /// Released before, with commits or a newer version that aren't in a release yet.
+  public var isWaitingToShip: Bool {
+    status == .unreleasedChanges || status == .readyToRelease
+  }
+
   /// The version to propose for the next release.
   public var suggestedVersion: SemanticVersion {
     switch (localVersion, latestRelease?.version) {

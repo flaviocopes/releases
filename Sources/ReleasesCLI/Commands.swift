@@ -86,8 +86,9 @@ enum Commands {
     CommandSpec(
       name: "prompt",
       summary: "Print the prompt that asks an agent to publish the next release.",
-      usage: "releases prompt <project> [--version <x.y.z> | --bump <patch|minor|major>] [--notes <text>] [--cursor] [--json]",
+      usage: "releases prompt (<project> | --waiting) [--version <x.y.z> | --bump <patch|minor|major>] [--notes <text>] [--cursor] [--json]",
       options: [
+        Option(name: "--waiting", help: "A prompt for every project waiting to ship, like Create Releases in the app."),
         versionOption,
         bump,
         notes,
@@ -97,6 +98,8 @@ enum Commands {
       details: """
         Without --version or --bump, the version is the project's own when it's newer
         than the latest release, or the next patch otherwise.
+        With --waiting, --bump and --notes apply to every project, and --cursor opens
+        them one after the other, each in its own window.
         """
     ),
     CommandSpec(
