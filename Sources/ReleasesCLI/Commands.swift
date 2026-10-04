@@ -46,6 +46,18 @@ enum Commands {
       details: "Drafts are left out. Prereleases and each app's first release are marked."
     ),
     CommandSpec(
+      name: "downloads",
+      summary: "Show how many times each project's releases were downloaded from GitHub.",
+      usage: "releases downloads [<project>] [--refresh] [--json]",
+      options: [refresh, json],
+      details: """
+        In-app updates download the same files, so they count too. GitHub only keeps the total
+        so far, so the app and this command save it every day they fetch the releases. The last
+        7 days show up once there's a count from a week ago.
+        With a project, it lists each release and the counts saved so far.
+        """
+    ),
+    CommandSpec(
       name: "show",
       summary: "Show a project and all its releases.",
       usage: "releases show <project> [--refresh] [--json]",
@@ -193,6 +205,7 @@ enum Commands {
         releases list --waiting            See the projects waiting to ship.
         releases recent                    See the latest releases across all projects.
         releases recent --first            See when each app launched.
+        releases downloads                 See how many times each app was downloaded.
         releases discover                  See the apps on this Mac that aren't released yet.
         releases show soundscape           See all the releases of one project.
         releases prompt soundscape --bump minor --cursor

@@ -78,6 +78,54 @@ enum Output {
     columns(rows)
   }
 
+  /// One line per project, most downloaded first: its downloads, the last 7 days and its releases. Then the total.
+  static func downloads(_ snapshots: [ProjectSnapshot], weekAgo: Date) {
+    var rows = snapshots.map { snapshot in
+      [
+        snapshot.name,
+        snapshot.totalDownloads.formatted(),
+        week(snapshot.downloads(since: weekAgo)),
+        "\(snapshot.releases.count { !$0.isDraft })"
+      ]
+    }
+    if isTerminal {
+      rows.insert(["PROJECT", "DOWNLOADS", "LAST 7 DAYS", "RELEASES"], at: 0)
+      rows.append(["Total", snapshots.totalDownloads.formatted(), week(snapshots.downloads(since: weekAgo)), ""])
+    }
+    columns(rows)
+  }
+
+  /// A project's downloads, each release's, and the counts saved so far.
+  static func downloads(of snapshot: ProjectSnapshot, weekAgo: Date) {
+    let total = snapshot.totalDownloads
+    var summary = "\(snapshot.name): \(total == 1 ? "1 download" : "\(total.formatted()) downloads")"
+    if let week = snapshot.downloads(since: weekAgo) {
+      summary += ", \(week.formatted()) in the last 7 days"
+    }
+    print(summary)
+
+    let releases = snapshot.releases.filter { !$0.isDraft }
+    guard !releases.isEmpty else {
+      print("\nNo releases on GitHub yet.")
+      return
+    }
+    print("\nReleases:")
+    columns(releases.map { ["  \($0.tag)", date($0.publishedAt), $0.downloadCount.formatted()] })
+
+    let history = snapshot.project.downloadHistory ?? []
+    if !history.isEmpty {
+      print("\nSaved counts:")
+      columns(history.suffix(14).map { ["  \(date($0.date))", $0.downloads.formatted()] })
+      if history.count > 14 {
+        hint("Showing the last 14 of \(history.count) days. Use --json to see them all.")
+      }
+    }
+  }
+
+  private static func week(_ downloads: Int?) -> String {
+    downloads.map { "+\($0.formatted())" } ?? "-"
+  }
+
   /// One line per project found on disk: name, where it stands, when it was last worked on, and its folder.
   static func found(_ projects: [FoundProject]) {
     var rows = projects.map { project in
@@ -218,6 +266,50 @@ struct TimelineJSON: Encodable {
     isFirstRelease = entry.isFirstRelease
     downloadCount = entry.release.downloadCount
     changes = entry.project.changes(in: entry.release).map(\.text)
+  }
+}
+
+/// The JSON shape of `releases downloads`.
+struct DownloadsJSON: Encodable {
+  var total: Int
+  /// Nil until Releases has a count from a week ago for every project.
+  var lastSevenDays: Int?
+  var trackedSince: Date?
+  var projects: [ProjectDownloadsJSON]
+
+  init(_ snapshots: [ProjectSnapshot], weekAgo: Date) {
+    total = snapshots.totalDownloads
+    lastSevenDays = snapshots.downloads(since: weekAgo)
+    trackedSince = snapshots.downloadsTrackedSince
+    projects = snapshots.map { ProjectDownloadsJSON($0, weekAgo: weekAgo) }
+  }
+}
+
+/// The JSON shape of one project in `releases downloads`.
+struct ProjectDownloadsJSON: Encodable {
+  struct ReleaseDownloads: Encodable {
+    var tag: String
+    var publishedAt: Date?
+    var downloads: Int
+  }
+
+  var name: String
+  var path: String
+  var downloads: Int
+  var lastSevenDays: Int?
+  var releases: [ReleaseDownloads]
+  /// One count a day, oldest first.
+  var history: [DownloadSample]
+
+  init(_ snapshot: ProjectSnapshot, weekAgo: Date) {
+    name = snapshot.name
+    path = snapshot.project.path
+    downloads = snapshot.totalDownloads
+    lastSevenDays = snapshot.downloads(since: weekAgo)
+    releases = snapshot.releases.filter { !$0.isDraft }.map {
+      ReleaseDownloads(tag: $0.tag, publishedAt: $0.publishedAt, downloads: $0.downloadCount)
+    }
+    history = snapshot.project.downloadHistory ?? []
   }
 }
 

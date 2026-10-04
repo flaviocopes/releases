@@ -140,6 +140,80 @@ struct Card<Content: View>: View {
   }
 }
 
+/// A big number in a card, with a symbol above and a label below. Nil shows a dash.
+struct Stat: View {
+  let value: Int?
+  let label: String
+  let symbol: String
+  let tint: Color
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Image(systemName: symbol)
+        .font(.title3)
+        .foregroundStyle(tint)
+      Group {
+        if let value {
+          Text(value, format: .number)
+        } else {
+          Text("–").foregroundStyle(.tertiary)
+        }
+      }
+      .font(.system(size: 26, weight: .bold))
+      .monospacedDigit()
+      Text(label)
+        .font(.callout)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(14)
+    .background(
+      RoundedRectangle(cornerRadius: 12, style: .continuous)
+        .fill(.quaternary.opacity(0.4))
+    )
+    .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+  }
+}
+
+/// Rows stacked in one rounded box, like a grouped list.
+struct RowGroup<Content: View>: View {
+  @ViewBuilder let content: Content
+
+  var body: some View {
+    VStack(spacing: 0) {
+      content
+    }
+    .background(.quaternary.opacity(0.4))
+    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+  }
+}
+
+/// A whole row that acts as a button and lights up on hover. The group clips it to its rounded corners.
+struct RowButton<Content: View>: View {
+  var tint: Color?
+  let action: () -> Void
+  @ViewBuilder let content: Content
+
+  @State private var isHovering = false
+
+  var body: some View {
+    content
+      .padding(.horizontal, 14)
+      .padding(.vertical, 10)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background {
+        if let tint {
+          LinearGradient(colors: [tint.opacity(0.16), tint.opacity(0.04)], startPoint: .leading, endPoint: .trailing)
+        }
+      }
+      .background(Color.primary.opacity(isHovering ? 0.05 : 0))
+      .contentShape(Rectangle())
+      .onTapGesture(perform: action)
+      .onHover { isHovering = $0 }
+  }
+}
+
 extension Int {
   var downloads: String {
     self == 1 ? "1 download" : "\(formatted()) downloads"

@@ -245,41 +245,19 @@ private struct Stats: View {
     let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now
     let thisWeek = entries.count { $0.date >= weekAgo }
     let released = model.snapshots.count { $0.latestRelease != nil }
-    let downloads = model.snapshots.reduce(0) { $0 + $1.totalDownloads }
+    let downloads = model.snapshots.totalDownloads
 
     HStack(spacing: 12) {
       Stat(value: thisWeek, label: thisWeek == 1 ? "release this week" : "releases this week", symbol: "calendar", tint: .green)
       Stat(value: released, label: released == 1 ? "app released" : "apps released", symbol: "shippingbox.fill", tint: .blue)
-      Stat(value: downloads, label: downloads == 1 ? "download from GitHub" : "downloads from GitHub", symbol: "arrow.down.circle.fill", tint: .orange)
-        .help("How many times the files of every release were downloaded from GitHub, since the first one. In-app updates count too.")
+      Button {
+        model.selection = .downloads
+      } label: {
+        Stat(value: downloads, label: downloads == 1 ? "download from GitHub" : "downloads from GitHub", symbol: "arrow.down.circle.fill", tint: .orange)
+      }
+      .buttonStyle(.plain)
+      .help("See the downloads of each app, and how they grew")
     }
-  }
-}
-
-private struct Stat: View {
-  let value: Int
-  let label: String
-  let symbol: String
-  let tint: Color
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      Image(systemName: symbol)
-        .font(.title3)
-        .foregroundStyle(tint)
-      Text(value, format: .number)
-        .font(.system(size: 26, weight: .bold))
-        .monospacedDigit()
-      Text(label)
-        .font(.callout)
-        .foregroundStyle(.secondary)
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(14)
-    .background(
-      RoundedRectangle(cornerRadius: 12, style: .continuous)
-        .fill(.quaternary.opacity(0.4))
-    )
   }
 }
 
@@ -433,43 +411,5 @@ private struct TimelineRow: View {
       return inlineMarkdown(headlines.joined(separator: " · "))
     }
     return AttributedString(entry.release.title ?? entry.release.tag)
-  }
-}
-
-/// Rows stacked in one rounded box, like a grouped list.
-private struct RowGroup<Content: View>: View {
-  @ViewBuilder let content: Content
-
-  var body: some View {
-    VStack(spacing: 0) {
-      content
-    }
-    .background(.quaternary.opacity(0.4))
-    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-  }
-}
-
-/// A whole row that acts as a button and lights up on hover. The group clips it to its rounded corners.
-private struct RowButton<Content: View>: View {
-  var tint: Color?
-  let action: () -> Void
-  @ViewBuilder let content: Content
-
-  @State private var isHovering = false
-
-  var body: some View {
-    content
-      .padding(.horizontal, 14)
-      .padding(.vertical, 10)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .background {
-        if let tint {
-          LinearGradient(colors: [tint.opacity(0.16), tint.opacity(0.04)], startPoint: .leading, endPoint: .trailing)
-        }
-      }
-      .background(Color.primary.opacity(isHovering ? 0.05 : 0))
-      .contentShape(Rectangle())
-      .onTapGesture(perform: action)
-      .onHover { isHovering = $0 }
   }
 }

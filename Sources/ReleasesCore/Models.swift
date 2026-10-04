@@ -107,6 +107,8 @@ public struct TrackedProject: Codable, Hashable, Sendable, Identifiable {
   public var releases: [Release]?
   public var releasesFetchedAt: Date?
   public var fetchError: String?
+  /// The downloads of every release, one count a day, oldest first. GitHub only knows the total so far.
+  public var downloadHistory: [DownloadSample]?
 
   public init(path: String, addedAt: Date = .now) {
     self.path = path

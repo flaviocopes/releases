@@ -16,6 +16,14 @@ struct ProjectListView: View {
       }
       .tag(SidebarItem.home)
 
+      Label {
+        Text("Downloads")
+      } icon: {
+        Image(systemName: "arrow.down.circle")
+          .foregroundStyle(.orange)
+      }
+      .tag(SidebarItem.downloads)
+
       Section("Projects") {
         ForEach(model.snapshots) { snapshot in
           ProjectRow(snapshot: snapshot)

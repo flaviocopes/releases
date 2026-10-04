@@ -4,6 +4,7 @@ import ReleasesCore
 
 enum SidebarItem: Hashable {
   case home
+  case downloads
   case project(ProjectSnapshot.ID)
   /// A project on disk that isn't in the list.
   case found(FoundProject.ID)
@@ -78,7 +79,7 @@ final class AppModel {
 
   /// Goes back home when the selected project is gone.
   private func fixSelection() {
-    if selection == nil || (selection != .home && selectedSnapshot == nil && selectedFound == nil) {
+    if selection == nil || (selection != .home && selection != .downloads && selectedSnapshot == nil && selectedFound == nil) {
       selection = .home
     }
   }

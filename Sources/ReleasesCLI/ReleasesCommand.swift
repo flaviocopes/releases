@@ -52,6 +52,8 @@ struct ReleasesCommand {
       try await list(parsed, tracker)
     case "recent":
       try await recent(parsed, tracker)
+    case "downloads":
+      try await downloads(parsed, tracker)
     case "show":
       try await show(parsed, tracker)
     case "discover":
@@ -169,6 +171,40 @@ struct ReleasesCommand {
     reportFetchErrors(snapshots)
     if entries.count < timeline.count {
       Output.hint("Showing \(entries.count) of \(timeline.count) \(firstOnly ? "first releases" : "releases"). Use --limit to see more.")
+    }
+  }
+
+  private static func downloads(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    let snapshots = try await tracker.refresh(maxAge: options.has("--refresh") ? nil : cacheAge)
+    let weekAgo = Date.now.addingTimeInterval(-7 * 86_400)
+
+    if let identifier = options.positionals.first {
+      let snapshot = try snapshots.project(matching: identifier)
+      if options.has("--json") {
+        try Output.json(ProjectDownloadsJSON(snapshot, weekAgo: weekAgo))
+      } else {
+        Output.downloads(of: snapshot, weekAgo: weekAgo)
+        reportFetchErrors([snapshot])
+      }
+      return
+    }
+
+    let released = snapshots.filter { !$0.releases.isEmpty }.sorted { $0.totalDownloads > $1.totalDownloads }
+    if options.has("--json") {
+      try Output.json(DownloadsJSON(released, weekAgo: weekAgo))
+      return
+    }
+
+    guard !released.isEmpty else {
+      print(snapshots.isEmpty ? "No projects yet. Add one with 'releases add <folder>'." : "No releases on GitHub yet.")
+      return
+    }
+    Output.downloads(released, weekAgo: weekAgo)
+    reportFetchErrors(snapshots)
+    if released.downloads(since: weekAgo) == nil, let since = released.downloadsTrackedSince {
+      Output.hint("Releases saves the downloads every day it fetches them, since \(Output.date(since)). The last 7 days fill in a week after that.")
+    } else {
+      Output.hint("Run 'releases downloads <project>' to see each release.")
     }
   }
 

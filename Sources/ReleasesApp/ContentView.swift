@@ -18,6 +18,8 @@ struct ContentView: View {
         ProjectDetailView(snapshot: found.snapshot, found: found)
       } else if model.snapshots.isEmpty {
         EmptyStateView()
+      } else if model.selection == .downloads {
+        DownloadsView()
       } else {
         HomeView()
       }

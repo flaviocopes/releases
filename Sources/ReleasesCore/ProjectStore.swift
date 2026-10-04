@@ -93,6 +93,7 @@ public actor ProjectStore {
         list.projects[index].releases = releases
         list.projects[index].releasesFetchedAt = date
         list.projects[index].fetchError = nil
+        list.projects[index].recordDownloads(at: date)
       case .failure(let error):
         list.projects[index].fetchError = error.text
       }

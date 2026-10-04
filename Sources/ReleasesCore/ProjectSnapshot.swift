@@ -112,10 +112,6 @@ public struct ProjectSnapshot: Identifiable, Hashable, Sendable {
     latestRelease?.version ?? localVersion ?? SemanticVersion(major: 0, minor: 9, patch: 0)
   }
 
-  public var totalDownloads: Int {
-    releases.reduce(0) { $0 + $1.downloadCount }
-  }
-
   /// What changed in a release: its section of CHANGELOG.md, or the changes in its GitHub notes.
   public func changes(in release: Release) -> [Change] {
     if let version = release.version?.description, let changes = local.changelog?[version], !changes.isEmpty {
