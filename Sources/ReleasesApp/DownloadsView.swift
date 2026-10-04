@@ -11,12 +11,16 @@ private enum ChartMode {
 struct DownloadsView: View {
   @Environment(AppModel.self) private var model
   @State private var chartMode = ChartMode.perDay
+  /// The app the chart shows on its own, by its name in the chart, or nil for all of them.
+  @State private var focusedApp: String?
 
   var body: some View {
     let released = model.snapshots
       .filter { !$0.releases.isEmpty }
       .sorted { $0.totalDownloads > $1.totalDownloads }
     let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now
+    let series = released.downloadSeries(top: Self.topCount)
+    let focused = series.contains { $0.name == focusedApp } ? focusedApp : nil
 
     ScrollView {
       VStack(alignment: .leading, spacing: 26) {
@@ -34,8 +38,8 @@ struct DownloadsView: View {
           }
         } else {
           stats(released, weekAgo: weekAgo)
-          chart(released)
-          apps(released, weekAgo: weekAgo)
+          chart(released, series: series, focused: focused)
+          apps(released, series: series, focused: focused, weekAgo: weekAgo)
         }
       }
       .padding(.horizontal, 32)
@@ -69,14 +73,19 @@ struct DownloadsView: View {
     return "Releases started saving the downloads on \(since.formatted(.dateTime.month(.wide).day())), so it knows the last 7 days from \(known.formatted(.dateTime.month(.wide).day()))."
   }
 
-  private func chart(_ released: [ProjectSnapshot]) -> some View {
-    let series = released.downloadSeries(top: Self.topCount)
+  private func chart(_ released: [ProjectSnapshot], series: [DownloadSeries], focused: String?) -> some View {
+    let visible = focused.map { name in series.filter { $0.name == name } } ?? series
 
     return Card {
       VStack(alignment: .leading, spacing: 14) {
-        HStack {
+        HStack(spacing: 10) {
           Text("Over time")
             .font(.headline)
+          if let focused {
+            FocusChip(name: focused, color: DownloadColors.color(for: focused, in: series)) {
+              focus(nil)
+            }
+          }
           Spacer()
           PillPicker(selection: $chartMode, options: [
             PillOption(value: .perDay, title: "Per Day", symbol: "chart.bar.fill"),
@@ -84,10 +93,10 @@ struct DownloadsView: View {
           ])
         }
 
-        DownloadsChart(series: series, perDay: chartMode == .perDay)
+        DownloadsChart(series: visible, colors: visible.map { DownloadColors.color(for: $0.name, in: series) }, perDay: chartMode == .perDay)
           .frame(height: 260)
 
-        Text(caption(released, series: series))
+        Text(caption(released, series: visible))
           .font(.caption)
           .foregroundStyle(.secondary)
           .fixedSize(horizontal: false, vertical: true)
@@ -95,9 +104,16 @@ struct DownloadsView: View {
     }
   }
 
+  /// Shows only one app in the chart, or every app again with nil.
+  private func focus(_ name: String?) {
+    withAnimation(.snappy(duration: 0.3)) {
+      focusedApp = name
+    }
+  }
+
   private func caption(_ released: [ProjectSnapshot], series: [DownloadSeries]) -> String {
     var sentences: [String] = []
-    if series.last?.name == "Other" {
+    if series.contains(where: { $0.name == "Other" }) {
       sentences.append("Other adds up the apps after the top \(Self.topCount), and the ones under 10 downloads.")
     }
     if series.total.contains(where: \.isEstimate) {
@@ -107,7 +123,8 @@ struct DownloadsView: View {
     return sentences.joined(separator: " ")
   }
 
-  private func apps(_ released: [ProjectSnapshot], weekAgo: Date) -> some View {
+  /// The top apps and Other, like in the chart. Clicking one shows only it in the chart, clicking it again shows them all.
+  private func apps(_ released: [ProjectSnapshot], series: [DownloadSeries], focused: String?, weekAgo: Date) -> some View {
     let (top, others) = released.splitByDownloads(top: Self.topCount)
     let most = Double(max(top.first?.totalDownloads ?? others.totalDownloads, 1))
 
@@ -116,22 +133,26 @@ struct DownloadsView: View {
 
       RowGroup {
         ForEach(Array(top.enumerated()), id: \.element.id) { index, snapshot in
+          let color = DownloadColors.color(for: snapshot.name, in: series)
           if index > 0 {
             Divider().padding(.leading, 62)
           }
-          RowButton {
-            model.select(snapshot)
+          RowButton(tint: focused == snapshot.name ? color : nil) {
+            focus(focused == snapshot.name ? nil : snapshot.name)
           } content: {
-            AppDownloadsRow(snapshot: snapshot, color: DownloadColors.color(at: index), share: Double(snapshot.totalDownloads) / most, weekAgo: weekAgo)
+            AppDownloadsRow(snapshot: snapshot, color: color, share: Double(snapshot.totalDownloads) / most, weekAgo: weekAgo)
           }
+          .help(focused == snapshot.name ? "Show every app in the chart" : "Show only \(snapshot.name) in the chart")
         }
         if !others.isEmpty {
           if !top.isEmpty {
             Divider().padding(.leading, 62)
           }
-          OtherDownloadsRow(apps: others, share: Double(others.totalDownloads) / most, weekAgo: weekAgo)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+          RowButton(tint: focused == "Other" ? DownloadColors.other : nil) {
+            focus(focused == "Other" ? nil : "Other")
+          } content: {
+            OtherDownloadsRow(apps: others, share: Double(others.totalDownloads) / most, weekAgo: weekAgo)
+          }
         }
       }
     }
@@ -145,8 +166,38 @@ private enum DownloadColors {
   static let palette: [Color] = [.orange, .blue, .green, .purple, .pink]
   static let other = Color.gray
 
-  static func color(at index: Int) -> Color {
-    palette[index % palette.count]
+  /// The color of a series by its name, from its place among all of them.
+  static func color(for name: String, in series: [DownloadSeries]) -> Color {
+    guard name != "Other" else { return other }
+    return palette[(series.firstIndex { $0.name == name } ?? 0) % palette.count]
+  }
+}
+
+/// The app the chart shows on its own. Clicking it shows every app again.
+private struct FocusChip: View {
+  let name: String
+  let color: Color
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      HStack(spacing: 6) {
+        Circle()
+          .fill(color)
+          .frame(width: 7, height: 7)
+        Text(name)
+        Image(systemName: "xmark")
+          .font(.caption2.weight(.bold))
+          .foregroundStyle(.secondary)
+      }
+      .font(.callout.weight(.medium))
+      .padding(.horizontal, 10)
+      .padding(.vertical, 4)
+      .background(Capsule().fill(color.opacity(0.16)))
+      .contentShape(Capsule())
+    }
+    .buttonStyle(.plain)
+    .help("Show every app")
   }
 }
 
@@ -154,6 +205,8 @@ private enum DownloadColors {
 /// A shaded band marks the estimated days, and hovering a day shows its numbers.
 private struct DownloadsChart: View {
   let series: [DownloadSeries]
+  /// One for each series.
+  let colors: [Color]
   let perDay: Bool
 
   @State private var hoveredDay: Date?
@@ -161,7 +214,6 @@ private struct DownloadsChart: View {
   var body: some View {
     let calendar = Calendar.current
     let shown = series.map { DownloadSeries(name: $0.name, points: perDay ? $0.points.perDay() : $0.points) }
-    let colors = shown.enumerated().map { index, series in series.name == "Other" ? DownloadColors.other : DownloadColors.color(at: index) }
     let totals = shown.total
     let lastDay = totals.last?.day ?? calendar.startOfDay(for: .now)
     let firstDay = min(totals.first?.day ?? lastDay, calendar.date(byAdding: .day, value: -13, to: lastDay) ?? lastDay)
