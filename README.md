@@ -33,7 +33,7 @@ defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
 ## Features
 
 - **Latest Releases** puts every release of every project in one timeline, grouped by day, with its downloads and what changed
-- Each app's first release stands out in green. Switch to **First Releases** to see only those, by month, and when you launched each app
+- Each app's first release stands out in green. Switch to **First Releases** to see when you launched each app, today, yesterday, in the last 7 days, then month by month
 - What changed comes from the project's `CHANGELOG.md`, or from the "What's new" part of the release notes on GitHub
 - **Waiting to ship** lists the projects with commits since their last release, or with a version newer than the last release
 - Each project shows its version and the file it comes from, its branch, the commits you haven't pushed or released, and every release with its downloads

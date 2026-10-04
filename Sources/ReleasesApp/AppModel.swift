@@ -25,7 +25,7 @@ final class AppModel {
   /// Apps and CLIs on disk that weren't in the list at the last look, the most recently worked on first.
   var found: [FoundProject] = []
   var selection: SidebarItem? = .home
-  /// Latest Releases lists only each project's first release, grouped by month.
+  /// Latest Releases lists only each project's first release, grouped into today, yesterday, the last 7 days, then months.
   var showsFirstReleasesOnly = false
   var isRefreshing = false
   var lastRefresh: Date?

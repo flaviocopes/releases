@@ -164,6 +164,42 @@ public struct TimelineEntry: Identifiable, Hashable, Sendable {
   }
 }
 
+/// Where a release falls on the timeline: today, yesterday, the other days of the last 7, or its month.
+public enum TimelinePeriod: Hashable, Sendable {
+  case today
+  case yesterday
+  case lastSevenDays
+  /// Starts on the first day of the month.
+  case month(Date)
+
+  public init(_ date: Date, now: Date = .now, calendar: Calendar = .current) {
+    let day = calendar.startOfDay(for: date)
+    let daysAgo = calendar.dateComponents([.day], from: day, to: calendar.startOfDay(for: now)).day ?? 0
+    switch daysAgo {
+    case ...0: self = .today
+    case 1: self = .yesterday
+    case 2..<7: self = .lastSevenDays
+    default: self = .month(calendar.dateInterval(of: .month, for: date)?.start ?? day)
+    }
+  }
+}
+
+extension [TimelineEntry] {
+  /// The entries by period, newest first. Expects them newest first, the way `timeline()` returns them.
+  public func groupedByPeriod(now: Date = .now, calendar: Calendar = .current) -> [(period: TimelinePeriod, entries: [TimelineEntry])] {
+    var groups: [(period: TimelinePeriod, entries: [TimelineEntry])] = []
+    for entry in self {
+      let period = TimelinePeriod(entry.date, now: now, calendar: calendar)
+      if groups.last?.period == period {
+        groups[groups.count - 1].entries.append(entry)
+      } else {
+        groups.append((period, [entry]))
+      }
+    }
+    return groups
+  }
+}
+
 extension [ProjectSnapshot] {
   /// Every published release of every project, newest first. Drafts have no date, so they're left out.
   public func timeline() -> [TimelineEntry] {

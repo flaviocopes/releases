@@ -1,7 +1,8 @@
 import ReleasesCore
 import SwiftUI
 
-/// Every release of every project, newest first and grouped by day. Or only the first ones, grouped by month.
+/// Every release of every project, newest first and grouped by day. Or only the first ones, grouped
+/// into today, yesterday, the last 7 days, then months.
 struct HomeView: View {
   @Environment(AppModel.self) private var model
 
@@ -21,13 +22,7 @@ struct HomeView: View {
               .foregroundStyle(.secondary)
           }
           Spacer(minLength: 0)
-          Picker("Show", selection: $model.showsFirstReleasesOnly) {
-            Text("All Releases").tag(false)
-            Text("First Releases").tag(true)
-          }
-          .pickerStyle(.segmented)
-          .labelsHidden()
-          .fixedSize()
+          ReleaseFilter(firstOnly: $model.showsFirstReleasesOnly)
         }
 
         Stats(entries: timeline)
@@ -42,16 +37,17 @@ struct HomeView: View {
               .foregroundStyle(.secondary)
           }
         } else if firstOnly {
-          ForEach(groups(entries, by: .month), id: \.start) { group in
+          ForEach(entries.groupedByPeriod(), id: \.period) { group in
             TimelineSection(
-              title: group.start.formatted(.dateTime.month(.wide).year()),
+              title: title(group.period),
               detail: group.entries.count == 1 ? "1 app" : "\(group.entries.count) apps",
               entries: group.entries,
-              firstReleasesOnly: true
+              firstReleasesOnly: true,
+              showsDay: group.period != .today && group.period != .yesterday
             )
           }
         } else {
-          ForEach(groups(entries, by: .day), id: \.start) { group in
+          ForEach(days(entries), id: \.start) { group in
             TimelineSection(
               title: dayTitle(group.start),
               detail: group.entries.count == 1 ? "1 release" : "\(group.entries.count) releases",
@@ -94,10 +90,19 @@ struct HomeView: View {
     return "Every release of your \(model.snapshots.count == 1 ? "project" : "\(model.snapshots.count) projects"), newest first."
   }
 
-  private func groups(_ entries: [TimelineEntry], by component: Calendar.Component) -> [(start: Date, entries: [TimelineEntry])] {
+  private func days(_ entries: [TimelineEntry]) -> [(start: Date, entries: [TimelineEntry])] {
     let calendar = Calendar.current
-    let groups = Dictionary(grouping: entries) { calendar.dateInterval(of: component, for: $0.date)?.start ?? $0.date }
+    let groups = Dictionary(grouping: entries) { calendar.startOfDay(for: $0.date) }
     return groups.keys.sorted(by: >).map { ($0, groups[$0] ?? []) }
+  }
+
+  private func title(_ period: TimelinePeriod) -> String {
+    switch period {
+    case .today: "Today"
+    case .yesterday: "Yesterday"
+    case .lastSevenDays: "Last 7 Days"
+    case .month(let start): start.formatted(.dateTime.month(.wide).year())
+    }
   }
 
   private func dayTitle(_ day: Date) -> String {
@@ -108,6 +113,71 @@ struct HomeView: View {
       return day.formatted(.dateTime.weekday(.wide).month(.wide).day())
     }
     return day.formatted(.dateTime.month(.wide).day().year())
+  }
+}
+
+/// All Releases or First Releases, two pills on one track. The selection slides over, and turns green for first releases.
+private struct ReleaseFilter: View {
+  @Binding var firstOnly: Bool
+  @Namespace private var selection
+
+  var body: some View {
+    HStack(spacing: 2) {
+      FilterOption(title: "All Releases", symbol: "square.stack.3d.up.fill", tint: nil, isSelected: !firstOnly, selection: selection) {
+        firstOnly = false
+      }
+      FilterOption(title: "First Releases", symbol: "sparkles", tint: .firstRelease, isSelected: firstOnly, selection: selection) {
+        firstOnly = true
+      }
+    }
+    .padding(3)
+    .background(Capsule().fill(.quaternary.opacity(0.5)))
+    .animation(.snappy(duration: 0.25), value: firstOnly)
+  }
+}
+
+private struct FilterOption: View {
+  let title: String
+  let symbol: String
+  /// Nil for a neutral pill.
+  let tint: Color?
+  let isSelected: Bool
+  let selection: Namespace.ID
+  let action: () -> Void
+
+  @Environment(\.colorScheme) private var colorScheme
+  @State private var isHovering = false
+
+  var body: some View {
+    Button(action: action) {
+      Label {
+        Text(title)
+          .foregroundStyle(isSelected || isHovering ? Color.primary : .secondary)
+      } icon: {
+        Image(systemName: symbol)
+          .foregroundStyle(isSelected ? tint ?? .primary : .secondary)
+      }
+      .font(.callout.weight(.medium))
+      .padding(.horizontal, 12)
+      .padding(.vertical, 6)
+      .background {
+        if isSelected {
+          Capsule()
+            .fill(pill)
+            .shadow(color: .black.opacity(tint == nil && colorScheme == .light ? 0.12 : 0), radius: 1.5, y: 1)
+            .matchedGeometryEffect(id: "selection", in: selection)
+        }
+      }
+      .contentShape(Capsule())
+    }
+    .buttonStyle(.plain)
+    .onHover { isHovering = $0 }
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
+  }
+
+  private var pill: Color {
+    if let tint { return tint.opacity(colorScheme == .dark ? 0.24 : 0.18) }
+    return colorScheme == .dark ? .white.opacity(0.14) : .white
   }
 }
 
@@ -199,6 +269,7 @@ private struct TimelineSection: View {
   let detail: String
   let entries: [TimelineEntry]
   var firstReleasesOnly = false
+  var showsDay = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
@@ -209,7 +280,7 @@ private struct TimelineSection: View {
           RowButton(tint: entry.isFirstRelease ? .firstRelease : nil) {
             model.select(entry.project)
           } content: {
-            TimelineRow(entry: entry, firstReleasesOnly: firstReleasesOnly)
+            TimelineRow(entry: entry, firstReleasesOnly: firstReleasesOnly, showsDay: showsDay)
           }
           if entry.id != entries.last?.id {
             Divider().padding(.leading, 62)
@@ -222,8 +293,10 @@ private struct TimelineSection: View {
 
 private struct TimelineRow: View {
   let entry: TimelineEntry
-  /// Every row is a first release, in a section for a whole month.
+  /// Every row is a first release, so the tag would repeat on each one.
   var firstReleasesOnly = false
+  /// The section spans more than one day, so the row shows the day instead of the time.
+  var showsDay = false
 
   var body: some View {
     HStack(spacing: 12) {
@@ -258,7 +331,7 @@ private struct TimelineRow: View {
         .foregroundStyle(.tertiary)
         .help(entry.release.downloadCount.downloads)
 
-      Text(entry.date, format: firstReleasesOnly ? .dateTime.month(.abbreviated).day() : .dateTime.hour().minute())
+      Text(entry.date, format: showsDay ? .dateTime.month(.abbreviated).day() : .dateTime.hour().minute())
         .font(.callout)
         .monospacedDigit()
         .foregroundStyle(.secondary)

@@ -131,6 +131,55 @@ struct ProjectSnapshotTests {
     #expect(launches.map { "\($0.project.name) \($0.release.tag)" } == ["NoteRepo v1.0.0", "Soundscape v1.0.0"])
   }
 
+  private static let utc: Calendar = {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "UTC")!
+    return calendar
+  }()
+
+  private func date(_ month: Int, _ day: Int, _ hour: Int = 12, _ minute: Int = 0) -> Date {
+    Self.utc.date(from: DateComponents(year: 2026, month: month, day: day, hour: hour, minute: minute))!
+  }
+
+  @Test
+  func periodsAreTodayYesterdayTheLastSevenDaysThenMonths() {
+    let now = date(10, 4, 19, 53)
+    func period(_ date: Date) -> TimelinePeriod { TimelinePeriod(date, now: now, calendar: Self.utc) }
+
+    #expect(period(date(10, 4, 0, 5)) == .today)
+    #expect(period(date(10, 4, 22)) == .today)
+    #expect(period(date(10, 3, 23, 59)) == .yesterday)
+    #expect(period(date(10, 3, 0, 0)) == .yesterday)
+    #expect(period(date(10, 2)) == .lastSevenDays)
+    #expect(period(date(9, 28, 0, 0)) == .lastSevenDays)
+    #expect(period(date(9, 27, 23, 59)) == .month(date(9, 1, 0, 0)))
+    #expect(period(date(8, 14)) == .month(date(8, 1, 0, 0)))
+  }
+
+  @Test
+  func groupsFirstReleasesByPeriodNewestFirst() {
+    func launch(_ name: String, _ date: Date) -> ProjectSnapshot {
+      snapshot(path: "/dev/\(name.lowercased())", name: name, releases: [
+        Release(tag: "v1.0.0", publishedAt: date, url: URL(string: "https://github.com/flaviocopes/\(name.lowercased())/releases/tag/v1.0.0")!)
+      ])
+    }
+
+    let groups = [
+      launch("Calculum", date(10, 2)),
+      launch("Blueprint", date(10, 4, 9)),
+      launch("Soundscape", date(9, 21)),
+      launch("Postdeck", date(10, 3)),
+      launch("NoteRepo", date(9, 29)),
+      launch("Shipyard", date(8, 30))
+    ]
+    .timeline()
+    .filter(\.isFirstRelease)
+    .groupedByPeriod(now: date(10, 4, 19, 53), calendar: Self.utc)
+
+    #expect(groups.map(\.period) == [.today, .yesterday, .lastSevenDays, .month(date(9, 1, 0, 0)), .month(date(8, 1, 0, 0))])
+    #expect(groups.map { $0.entries.map(\.project.name) } == [["Blueprint"], ["Postdeck"], ["Calculum", "NoteRepo"], ["Soundscape"], ["Shipyard"]])
+  }
+
   @Test
   func findsProjectsByNameFolderOrRepo() throws {
     let snapshots = [
