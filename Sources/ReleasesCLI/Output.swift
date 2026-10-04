@@ -312,7 +312,7 @@ struct DownloadsJSON: Encodable {
 /// The JSON shape of one day in `releases downloads --by-day`, newest first.
 struct DayDownloadsJSON: Encodable {
   struct AppDownloads: Encodable {
-    /// The app's name, or "Other" for the apps with fewer than 10 downloads.
+    /// The app's name, or "Other" for the apps after the top 5 and the ones under 10 downloads.
     var name: String
     var downloads: Int
   }

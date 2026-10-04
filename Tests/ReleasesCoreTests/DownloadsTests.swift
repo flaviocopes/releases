@@ -111,9 +111,18 @@ struct DownloadsTests {
       .downloadSeries(through: date(10, 4, 19), calendar: Self.utc)
     #expect(series.map(\.name) == ["Soundscape", "NoteRepo", "Other"])
     #expect(series[2].points.last?.downloads == 6)
+  }
 
-    let alone = [soundscape(), tiny("Postdeck", downloads: 4)].downloadSeries(through: date(10, 4, 19), calendar: Self.utc)
-    #expect(alone.map(\.name) == ["Soundscape", "Postdeck"])
+  @Test
+  func keepsTheTopFiveAppsAndAddsUpTheRest() {
+    let apps = (1...7).map { tiny("App \($0)", downloads: 10 * $0) }
+    let split = apps.splitByDownloads()
+    #expect(split.top.map(\.name) == ["App 7", "App 6", "App 5", "App 4", "App 3"])
+    #expect(split.others.map(\.name) == ["App 2", "App 1"])
+
+    let series = apps.downloadSeries(through: date(10, 4, 19), calendar: Self.utc)
+    #expect(series.map(\.name) == ["App 7", "App 6", "App 5", "App 4", "App 3", "Other"])
+    #expect(series.last?.points.last?.downloads == 30)
   }
 
   @Test

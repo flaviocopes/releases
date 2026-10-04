@@ -139,16 +139,23 @@ extension [ProjectSnapshot] {
     return total
   }
 
-  /// Each app's downloads so far at the end of each day, from the first release to today, the most
-  /// downloaded first. The apps with fewer than `minimum` downloads come last, added up as "Other",
-  /// unless there's only one of them.
-  public func downloadSeries(minimum: Int = 10, through now: Date = .now, calendar: Calendar = .current) -> [DownloadSeries] {
+  /// The released apps, most downloaded first: the top `count` with at least `minimum` downloads
+  /// each, and the others.
+  public func splitByDownloads(top count: Int = 5, minimum: Int = 10) -> (top: [ProjectSnapshot], others: [ProjectSnapshot]) {
     let released = filter { $0.downloadsStart != nil }.sorted { lhs, rhs in
       lhs.totalDownloads == rhs.totalDownloads
         ? lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
         : lhs.totalDownloads > rhs.totalDownloads
     }
-    guard let start = released.compactMap(\.downloadsStart).min() else { return [] }
+    let top = Array(released.prefix(count).prefix { $0.totalDownloads >= minimum })
+    return (top, Array(released.dropFirst(top.count)))
+  }
+
+  /// The top apps' downloads so far at the end of each day, from the first release to today, the
+  /// most downloaded first. The others come last, added up as "Other".
+  public func downloadSeries(top count: Int = 5, minimum: Int = 10, through now: Date = .now, calendar: Calendar = .current) -> [DownloadSeries] {
+    let (top, others) = splitByDownloads(top: count, minimum: minimum)
+    guard let start = (top + others).compactMap(\.downloadsStart).min() else { return [] }
     let days = days(from: start, through: now, calendar: calendar)
 
     func points(_ projects: [ProjectSnapshot]) -> [DownloadPoint] {
@@ -158,12 +165,8 @@ extension [ProjectSnapshot] {
       }
     }
 
-    let few = released.filter { $0.totalDownloads < minimum }
-    guard few.count > 1 else {
-      return released.map { DownloadSeries(name: $0.name, points: points([$0])) }
-    }
-    return released.filter { $0.totalDownloads >= minimum }.map { DownloadSeries(name: $0.name, points: points([$0])) }
-      + [DownloadSeries(name: "Other", points: points(few))]
+    let series = top.map { DownloadSeries(name: $0.name, points: points([$0])) }
+    return others.isEmpty ? series : series + [DownloadSeries(name: "Other", points: points(others))]
   }
 }
 
