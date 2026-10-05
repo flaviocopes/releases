@@ -55,6 +55,45 @@ struct ProjectSnapshotTests {
   }
 
   @Test
+  func waitingToShipListsTheMostCommitsFirst() {
+    func commits(_ count: Int) -> [Commit] {
+      (0..<count).map { Commit(hash: "a1b2c3\($0)", subject: "Change \($0)") }
+    }
+
+    let waiting = [
+      snapshot(path: "/dev/blueprint", name: "Blueprint", releases: [release("v1.0.2")], commits: commits(1)),
+      snapshot(path: "/dev/calculum", name: "Calculum", releases: [release("v1.0.2")], commits: []),
+      snapshot(path: "/dev/postdeck", name: "Postdeck", releases: [release("v1.0.2")], commits: commits(9)),
+      snapshot(path: "/dev/snake", name: "Snake", version: "1.1.0", releases: [release("v1.0.0")], commits: commits(5)),
+      snapshot(path: "/dev/soundscape", name: "Soundscape", releases: [release("v1.0.2")], commits: commits(1)),
+      snapshot(path: "/dev/noterepo", name: "NoteRepo", version: "2.3.0", releases: [release("v2.2.0")], commits: nil)
+    ].waitingToShip()
+
+    #expect(waiting.map(\.name) == ["Postdeck", "Snake", "Blueprint", "Soundscape", "NoteRepo"])
+  }
+
+  @Test
+  func checkPromptNamesEveryFolder() {
+    var snake = snapshot(path: "/Users/flavio/dev/snake", name: "Snake", version: "1.1.0", releases: [release("v1.0.0")], commits: [
+      Commit(hash: "a1b2c3d", subject: "Add a pause button"),
+      Commit(hash: "e4f5a6b", subject: "README: link the demo")
+    ])
+    snake.local.hasUncommittedChanges = true
+    let blueprint = snapshot(path: "/Users/flavio/dev/blueprint", name: "Blueprint", releases: [release("v1.0.2")], commits: [
+      Commit(hash: "c7d8e9f", subject: "Remove the CI workflow")
+    ])
+
+    let prompt = ReleasePrompt.check([snake, blueprint], notes: "Skip Blueprint this week.")
+    #expect(prompt.hasPrefix("Check which of my projects need a new release."))
+    #expect(prompt.contains("- Snake, /Users/flavio/dev/snake: 2 commits since v1.0.0, version already set to 1.1.0, uncommitted changes\n- Blueprint, /Users/flavio/dev/blueprint: 1 commit since v1.0.2"))
+    #expect(prompt.contains("Wait for my go-ahead"))
+    #expect(prompt.contains("\"Later releases\" steps of the open-source-release skill"))
+    #expect(prompt.contains("ask me whether they belong in the release"))
+    #expect(prompt.hasSuffix("Skip Blueprint this week."))
+    #expect(!ReleasePrompt.check([blueprint]).contains("uncommitted"))
+  }
+
+  @Test
   func statusText() {
     let commits = [Commit(hash: "a1b2c3d", subject: "Fix"), Commit(hash: "e4f5a6b", subject: "Loop")]
     #expect(snapshot(releases: [release("v1.0.2")], commits: commits).statusText == "2 commits since v1.0.2")
@@ -233,5 +272,6 @@ struct ProjectSnapshotTests {
     #expect(url.absoluteString.contains("C%2B%2B"))
     #expect(url.absoluteString.contains("%26"))
     #expect(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first?.value == "Release C++ tools 1.0.0.\nGo & ship")
+    #expect(Cursor.agentsWindowURL.absoluteString == "cursor://anysphere.cursor-deeplink/glass")
   }
 }

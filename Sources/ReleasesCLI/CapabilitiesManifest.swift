@@ -33,6 +33,10 @@ struct CapabilitiesManifest: Encodable {
         command: "releases list --waiting --json"
       ),
       Capability(
+        description: "Have an agent in Cursor check which projects waiting to ship need a release",
+        command: "releases prompt --check --cursor"
+      ),
+      Capability(
         description: "List the latest releases across every tracked project",
         command: "releases recent --json"
       ),

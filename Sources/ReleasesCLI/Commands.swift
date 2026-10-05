@@ -106,10 +106,11 @@ enum Commands {
     ),
     CommandSpec(
       name: "prompt",
-      summary: "Print the prompt that asks an agent to publish the next release.",
-      usage: "releases prompt (<project> | --waiting) [--version <x.y.z> | --bump <patch|minor|major>] [--notes <text>] [--cursor] [--json]",
+      summary: "Print the prompt that asks an agent to publish the next release, or to check which projects need one.",
+      usage: "releases prompt (<project> | --waiting | --check) [--version <x.y.z> | --bump <patch|minor|major>] [--notes <text>] [--cursor] [--json]",
       options: [
         Option(name: "--waiting", help: "A prompt for every project waiting to ship, like Create Releases in the app."),
+        Option(name: "--check", help: "One prompt that asks an agent which projects waiting to ship need a release, like Check with Agent in the app."),
         versionOption,
         bump,
         notes,
@@ -121,6 +122,9 @@ enum Commands {
         than the latest release, or the next patch otherwise.
         With --waiting, --bump and --notes apply to every project, and --cursor opens
         them one after the other, each in its own window.
+        With --check, the prompt lists the folders of every project waiting to ship, the
+        most commits first. The agent picks the ones worth a release and their versions, and
+        waits for your go-ahead. --cursor opens it in a new agent in Cursor's Agents window.
         """
     ),
     CommandSpec(
@@ -214,7 +218,8 @@ enum Commands {
       Get started:
         releases add ~/dev/soundscape      Track a project.
         releases list                      See every project and its latest release.
-        releases list --waiting            See the projects waiting to ship.
+        releases list --waiting            See the projects waiting to ship, the most commits first.
+        releases prompt --check --cursor   Have an agent check which of them need a release.
         releases recent                    See the latest releases across all projects.
         releases recent --first            See when each app launched.
         releases downloads                 See how many times each app was downloaded.

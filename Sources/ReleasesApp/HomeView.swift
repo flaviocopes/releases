@@ -75,6 +75,15 @@ struct HomeView: View {
         Spacer()
         if !waiting.isEmpty {
           Button {
+            Task { await model.checkWaitingWithAgent() }
+          } label: {
+            Label("Check with Agent", systemImage: "sparkle.magnifyingglass")
+          }
+          .labelStyle(.titleAndIcon)
+          .disabled(!Cursor.isInstalled)
+          .help(Cursor.isInstalled ? "Ask an agent in Cursor which of the projects waiting to ship need a release" : "Cursor isn't installed")
+
+          Button {
             model.createReleasesForWaiting()
           } label: {
             Label(waiting.count == 1 ? "Create Release…" : "Create \(waiting.count) Releases…", systemImage: "shippingbox")

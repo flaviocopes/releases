@@ -458,6 +458,13 @@ struct PromptJSON: Encodable {
   var openedInCursor: Bool
 }
 
+struct CheckPromptJSON: Encodable {
+  var projects: [NameJSON]
+  /// Nil when nothing is waiting to ship.
+  var prompt: String?
+  var openedInCursor: Bool
+}
+
 struct OpenJSON: Encodable {
   /// What opened: app, release, github, cursor or finder.
   var opened: String

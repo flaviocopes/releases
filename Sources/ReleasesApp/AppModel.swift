@@ -224,7 +224,16 @@ final class AppModel {
   }
 
   var waitingToShip: [ProjectSnapshot] {
-    snapshots.filter(\.isWaitingToShip)
+    snapshots.waitingToShip()
+  }
+
+  /// One agent in Cursor's Agents window checks which projects waiting to ship are worth a release.
+  func checkWaitingWithAgent() async {
+    do {
+      try await Cursor.startAgent(prompt: ReleasePrompt.check(waitingToShip))
+    } catch {
+      errorMessage = error.localizedDescription
+    }
   }
 
   /// One project gets the usual sheet, more get the one that releases them all.

@@ -66,6 +66,54 @@ public enum ReleasePrompt {
     return lines.joined(separator: "\n")
   }
 
+  /// The prompt that asks one agent which of the projects waiting to ship are worth a release. It runs in
+  /// Cursor's Agents window, which can't be pointed at a folder, so it names every folder.
+  public static func check(_ snapshots: [ProjectSnapshot], notes: String = "") -> String {
+    var lines = [
+      "Check which of my projects need a new release. Each one has changes since its last release on GitHub:",
+      ""
+    ]
+
+    for snapshot in snapshots {
+      var details: [String] = []
+      let tag = snapshot.latestRelease?.tag ?? "the last release"
+      if let commits = snapshot.unreleasedCommits, !commits.isEmpty {
+        details.append("\(ProjectSnapshot.commitCount(commits.count)) since \(tag)")
+      } else {
+        details.append("last release \(tag)")
+      }
+      if snapshot.status == .readyToRelease, let version = snapshot.localVersion {
+        details.append("version already set to \(version)")
+      }
+      if snapshot.local.hasUncommittedChanges {
+        details.append("uncommitted changes")
+      }
+      lines.append("- \(snapshot.name), \(snapshot.project.path): \(details.joined(separator: ", "))")
+    }
+
+    lines.append("")
+    lines.append(
+      "In each folder, look at what changed since the last release tag with git log and git diff. A release is worth it when people who use the app or the CLI get something new: a feature, a fix, a change they'll notice. Changes to the README, the docs, CI, screenshots or agent instructions alone don't need one."
+    )
+    lines.append("")
+    lines.append(
+      "Then give me a short list: the projects to release, each with the version you'd pick (patch, minor or major) and why, and the ones to skip. Wait for my go-ahead, then release them one at a time, following the \"Later releases\" steps of the open-source-release skill if you have it."
+    )
+
+    if snapshots.contains(where: \.local.hasUncommittedChanges) {
+      lines.append("")
+      lines.append("For the projects with uncommitted changes, ask me whether they belong in the release before committing anything.")
+    }
+
+    let extra = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+    if !extra.isEmpty {
+      lines.append("")
+      lines.append(extra)
+    }
+
+    return lines.joined(separator: "\n")
+  }
+
   /// What to do without the skill.
   static func firstReleaseSteps(_ version: SemanticVersion, createRepository: Bool) -> String {
     let start = createRepository ? "Create the GitHub repo and push the project. Then set" : "Set"
@@ -85,9 +133,17 @@ public enum CursorError: LocalizedError, Sendable {
   }
 }
 
-/// Opens a project in Cursor with a prompt ready in the chat. Cursor asks before running it.
+/// Opens a project in Cursor with a prompt ready in the chat, or a prompt in a new agent in the Agents window.
+/// Cursor asks before running it.
 public enum Cursor {
   static let bundleIdentifier = "com.todesktop.230313mzl4w4u92"
+
+  /// Opens or focuses the Agents window.
+  public static let agentsWindowURL = URL(string: "cursor://anysphere.cursor-deeplink/glass")!
+
+  static var isRunning: Bool {
+    Shell.run("/usr/bin/pgrep", ["-f", "Cursor.app/Contents/MacOS/Cursor"]).succeeded
+  }
 
   public static var isInstalled: Bool {
     let home = FileManager.default.homeDirectoryForCurrentUser.path
@@ -117,6 +173,21 @@ public enum Cursor {
   public static func start(prompt: String, in folder: URL, delay: Duration = .milliseconds(1500)) async throws {
     try open(folder)
     try await Task.sleep(for: delay)
+    guard Shell.run("/usr/bin/open", [promptURL(prompt).absoluteString]).succeeded else {
+      throw CursorError.couldNotOpen
+    }
+  }
+
+  /// Cursor hands a prompt link to the window in front, and the Agents window turns it into a new agent.
+  /// So the Agents window opens first, and the prompt follows once it's in front, later when Cursor has to start.
+  /// The Agents window ignores the link's workspace, so the prompt names the folders.
+  public static func startAgent(prompt: String) async throws {
+    guard isInstalled else { throw CursorError.notInstalled }
+    let wasRunning = isRunning
+    guard Shell.run("/usr/bin/open", [agentsWindowURL.absoluteString]).succeeded else {
+      throw CursorError.couldNotOpen
+    }
+    try await Task.sleep(for: wasRunning ? .seconds(2) : .seconds(6))
     guard Shell.run("/usr/bin/open", [promptURL(prompt).absoluteString]).succeeded else {
       throw CursorError.couldNotOpen
     }

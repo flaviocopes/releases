@@ -130,7 +130,7 @@ struct ReleasesCommand {
   private static func list(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
     let all = try await tracker.refresh(maxAge: options.has("--refresh") ? nil : cacheAge)
     let waitingOnly = options.has("--waiting")
-    let snapshots = waitingOnly ? all.filter(\.isWaitingToShip) : all
+    let snapshots = waitingOnly ? all.waitingToShip() : all
 
     if options.has("--json") {
       try Output.json(snapshots.map { ProjectJSON($0, includeReleases: false) })
@@ -144,7 +144,7 @@ struct ReleasesCommand {
     }
     reportFetchErrors(all)
     if waitingOnly, snapshots.count > 1 {
-      Output.hint("Run 'releases prompt --waiting --cursor' to release them all.")
+      Output.hint("Run 'releases prompt --check --cursor' to have an agent check which need a release, or 'releases prompt --waiting --cursor' to release them all.")
     } else if !snapshots.isEmpty {
       Output.hint("Run 'releases show <project>' to see every release.")
     }
@@ -332,6 +332,10 @@ struct ReleasesCommand {
   }
 
   private static func prompt(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    if options.has("--check") {
+      try await promptCheck(options, tracker)
+      return
+    }
     if options.has("--waiting") {
       try await promptWaiting(options, tracker)
       return
@@ -372,7 +376,7 @@ struct ReleasesCommand {
       throw CLIError.conflictingOptions("--version", "--waiting")
     }
 
-    let waiting = try await tracker.refresh(maxAge: cacheAge).filter(\.isWaitingToShip)
+    let waiting = try await tracker.refresh(maxAge: cacheAge).waitingToShip()
     let releases = try waiting.map { snapshot in
       let version = try requestedVersion(options, for: snapshot) ?? snapshot.suggestedVersion
       return (snapshot: snapshot, version: version, prompt: ReleasePrompt.make(for: snapshot, version: version, notes: options.value("--notes") ?? ""))
@@ -399,6 +403,31 @@ struct ReleasesCommand {
       print("Opened \(releases.map(\.snapshot.name).joined(separator: ", ")) in Cursor, each in its own window. Review each prompt in its chat and send it.")
     } else {
       print(releases.map(\.prompt).joined(separator: "\n\n---\n\n"))
+    }
+  }
+
+  private static func promptCheck(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
+    if let conflict = options.positionals.first ?? ["--waiting", "--version", "--bump"].first(where: { options.has($0) || options.value($0) != nil }) {
+      throw CLIError.conflictingOptions(conflict, "--check")
+    }
+
+    let waiting = try await tracker.refresh(maxAge: cacheAge).waitingToShip()
+    let text = waiting.isEmpty ? nil : ReleasePrompt.check(waiting, notes: options.value("--notes") ?? "")
+
+    if options.has("--cursor"), let text {
+      try await Cursor.startAgent(prompt: text)
+    }
+
+    if options.has("--json") {
+      try Output.json(CheckPromptJSON(
+        projects: waiting.map { NameJSON(name: $0.name, path: $0.project.path) },
+        prompt: text,
+        openedInCursor: options.has("--cursor") && text != nil
+      ))
+    } else if let text {
+      print(options.has("--cursor") ? "Opened Cursor's Agents window with a prompt to check \(waiting.count == 1 ? "1 project" : "\(waiting.count) projects"). Review it and send it." : text)
+    } else {
+      print("Nothing is waiting to ship.")
     }
   }
 

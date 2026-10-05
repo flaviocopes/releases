@@ -220,6 +220,11 @@ extension [ProjectSnapshot] {
     }
   }
 
+  /// The projects waiting to ship, the most commits since their last release first. Ties keep their order.
+  public func waitingToShip() -> [ProjectSnapshot] {
+    filter(\.isWaitingToShip).sorted { ($0.unreleasedCommits?.count ?? 0) > ($1.unreleasedCommits?.count ?? 0) }
+  }
+
   /// Finds a project by path, folder name, app name, or GitHub repo (`owner/name` or `name`).
   public func project(matching identifier: String) throws -> ProjectSnapshot {
     let expanded = (identifier as NSString).expandingTildeInPath

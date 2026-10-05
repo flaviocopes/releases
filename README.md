@@ -36,7 +36,7 @@ defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
 - **Downloads** shows the total, the last 7 days, and your top 5 apps, with a chart of the downloads of each day or the total so far, app by app. GitHub only keeps the total so far, so Releases saves it every day
 - Each app's first release stands out in green. Switch to **First Releases** to see when you launched each app, today, yesterday, in the last 7 days, then month by month
 - What changed comes from the project's `CHANGELOG.md`, or from the "What's new" part of the release notes on GitHub
-- The **Waiting to Ship** tab lists the projects with commits since their last release, or with a version newer than the last release, and the commits waiting to go out
+- The **Waiting to Ship** tab lists the projects with commits since their last release, or with a version newer than the last release, the most commits first, with the commits waiting to go out. **Check with Agent** asks your coding agent which of them are worth a release
 - Each project shows its version and the file it comes from, its branch, the commits you haven't pushed or released, and every release with its downloads
 - **Create Release** suggests the next version, writes the prompt for your coding agent, and opens it in Cursor. Nothing runs until you send it. **Create Releases** does it for every project waiting to ship
 - Add a project by dropping its folder on the window, or with `releases add`. **Add More…** lists the apps and command-line tools next to your projects that aren't in the list yet
@@ -80,6 +80,8 @@ It works for projects that aren't on GitHub yet, too. The prompt then asks the a
 
 When more than one project is waiting to ship, click **Create Releases…** in the toolbar of Latest Releases to release them all. Each one gets its next patch version, or the version in the project when it's newer, and you can pick another or uncheck the ones to leave for later. **Continue in Cursor** opens them one after the other, each in its own window with its own prompt.
 
+Not sure which ones deserve a release? Click **Check with Agent** instead. It opens a new agent in Cursor's Agents window with one prompt that lists the folder of every project waiting to ship. The agent looks at what changed in each one, and tells you which to release, with the version, and which to skip, since a README tweak or a CI change alone doesn't need a release. It waits for your go-ahead before releasing anything.
+
 ## Adding projects
 
 Drop a project folder on the window, or click **Add More…** at the end of the sidebar. The + button in the toolbar and `⌘O` do the same. The Add Projects sheet lists the apps and command-line tools next to your projects that aren't in Releases yet. Each one says whether it's on GitHub, whether it has a release, and when you last worked on it. Click **Add**, or **Choose Folder…** for a project somewhere else.
@@ -117,7 +119,7 @@ Pass another folder to install it somewhere else, like `./Scripts/install-cli.sh
 | `releases discover` | The apps on this Mac that aren't in the list, like Add Projects in the app |
 | `releases hide <project>` | Leaves a project out of Add Projects |
 | `releases unhide <folder>` | Brings a hidden project back |
-| `releases prompt <project>` | Prints the release prompt, or opens it in Cursor with `--cursor`. `--waiting` does it for every project waiting to ship |
+| `releases prompt <project>` | Prints the release prompt, or opens it in Cursor with `--cursor`. `--waiting` does it for every project waiting to ship, and `--check` asks one agent which of them need a release |
 | `releases open <project>` | Shows a project in the app, or opens it on GitHub, in Cursor, in GitHub Desktop or in the Finder |
 | `releases rename <project> <name>` | Gives a project another name in Releases, or `--reset` to go back |
 | `releases refresh` | Fetches every release from GitHub now |
