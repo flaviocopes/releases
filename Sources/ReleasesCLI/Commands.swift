@@ -180,6 +180,13 @@ enum Commands {
       usage: "releases help [command] [--json]",
       options: [json],
       details: "With --json it prints every command, its usage and its options, for agents."
+    ),
+    CommandSpec(
+      name: "capabilities",
+      summary: "What releases can do, and what changed in each version.",
+      usage: "releases capabilities [--json]",
+      options: [json],
+      details: "Static summary for agents. No network and no user data."
     )
   ]
 
@@ -217,6 +224,7 @@ enum Commands {
 
       For agents:
         releases help --json               Every command and option, as JSON.
+        releases capabilities --json       What releases can do, and what changed.
         releases open soundscape --release --bump minor
                                            Show the Create Release sheet in the app, for a human to review.
         Errors go to stderr and exit with 1. The app picks up every change to the list right away.

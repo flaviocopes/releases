@@ -25,6 +25,10 @@ let package = Package(
     .testTarget(
       name: "ReleasesCoreTests",
       dependencies: ["ReleasesCore"]
+    ),
+    .testTarget(
+      name: "ReleasesCLITests",
+      dependencies: ["ReleasesCLI"]
     )
   ]
 )

@@ -122,6 +122,7 @@ Pass another folder to install it somewhere else, like `./Scripts/install-cli.sh
 | `releases rename <project> <name>` | Gives a project another name in Releases, or `--reset` to go back |
 | `releases refresh` | Fetches every release from GitHub now |
 | `releases remove <project>` | Takes projects off the list, and leaves their folders alone |
+| `releases capabilities` | What releases can do for agents, and what changed in each version. Add `--json` for the machine-readable manifest |
 
 A project is its folder path, its folder name, its app name, or its GitHub repo. `show` and `prompt` also take a folder that isn't in the list.
 
@@ -135,7 +136,7 @@ Run `releases help <command>` for the options of each command.
 
 ## For agents
 
-Every command takes `--json`. `releases help --json` lists every command and its options, so an agent can learn the tool in one call. Errors go to stderr with exit code 1.
+Every command takes `--json`. `releases help --json` lists every command and its options, so an agent can learn the tool in one call. `releases capabilities --json` answers what it can do and what changed in each version, without reading your project list. Errors go to stderr with exit code 1.
 
 `releases open` drives the app's window. An agent can show you a project, or open the Create Release sheet with the version and the notes filled in:
 

@@ -43,6 +43,12 @@ struct ReleasesCommand {
     }
 
     let parsed = try ParsedArguments.parse(rest, for: spec)
+
+    if spec.name == "capabilities" {
+      try CapabilitiesManifest.current.print(json: parsed.has("--json"))
+      return
+    }
+
     let tracker = ReleaseTracker()
 
     switch spec.name {
