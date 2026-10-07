@@ -57,7 +57,7 @@ struct CapabilitiesManifest: Encodable {
         command: "releases prompt soundscape --bump minor --codex"
       ),
       Capability(
-        description: "Show a project in the Releases app, or open its Create Release sheet",
+        description: "Show a project in Releases, open it in Codex with --codex, or open its Create Release sheet",
         command: "releases open soundscape --release --bump minor"
       ),
       Capability(

@@ -432,7 +432,7 @@ struct ReleasesCommand {
   }
 
   private static func open(_ options: ParsedArguments, _ tracker: ReleaseTracker) async throws {
-    let targets = ["--github", "--cursor", "--github-desktop", "--finder", "--release"].filter(options.has)
+    let targets = ["--github", "--codex", "--cursor", "--github-desktop", "--finder", "--release"].filter(options.has)
     let wantsRelease = options.has("--release") || options.value("--version") != nil
       || options.value("--bump") != nil || options.value("--notes") != nil
     if targets.count > 1 {
@@ -457,6 +457,9 @@ struct ReleasesCommand {
       guard let repository = snapshot.repository else { throw CLIError.notOnGitHub(name: snapshot.name) }
       try openURL(repository.url)
       try report(options, OpenJSON(opened: "github", project: snapshot.name, path: path, url: repository.url), "Opened \(repository.url.absoluteString).")
+    case "--codex":
+      try Codex.openProject(snapshot.project.url)
+      try report(options, OpenJSON(opened: "codex", project: snapshot.name, path: path, url: nil), "Opened \(snapshot.name) in Codex.")
     case "--cursor":
       try Cursor.open(snapshot.project.url)
       try report(options, OpenJSON(opened: "cursor", project: snapshot.name, path: path, url: nil), "Opened \(snapshot.name) in Cursor.")

@@ -29,6 +29,7 @@ struct CapabilitiesManifestTests {
       #expect(!arguments.has("--cursor"))
     }
     let open = try #require(Commands.spec(for: "open"))
+    #expect(try ParsedArguments.parse(["soundscape", "--codex", "--json"], for: open).has("--codex"))
     #expect(try ParsedArguments.parse(["soundscape", "--cursor"], for: open).has("--cursor"))
   }
 }

@@ -129,14 +129,15 @@ enum Commands {
     ),
     CommandSpec(
       name: "open",
-      summary: "Show a project in the app, or open it on GitHub, in Cursor, in GitHub Desktop or in the Finder.",
-      usage: "releases open [<project>] [--release [--version <x.y.z> | --bump <level>] [--notes <text>] | --github | --cursor | --github-desktop | --finder]",
+      summary: "Show a project in the app, or open it on GitHub, in Codex, in Cursor, in GitHub Desktop or in the Finder.",
+      usage: "releases open [<project>] [--release [--version <x.y.z> | --bump <level>] [--notes <text>] | --github | --codex | --cursor | --github-desktop | --finder]",
       options: [
         Option(name: "--release", help: "Open the app's Create Release sheet, ready for you to review."),
         versionOption,
         bump,
         notes,
         Option(name: "--github", help: "Open the project on GitHub."),
+        Option(name: "--codex", help: "Open the project in Codex with an empty prompt."),
         Option(name: "--cursor", help: "Open the project in Cursor."),
         Option(name: "--github-desktop", help: "Open the project in GitHub Desktop."),
         Option(name: "--finder", help: "Show the project folder in the Finder."),

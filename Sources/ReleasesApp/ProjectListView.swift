@@ -56,7 +56,7 @@ struct ProjectListView: View {
   }
 }
 
-/// Open on GitHub, in Cursor and in the Finder. Used by the context menu and the detail toolbar.
+/// Project shortcuts used by the context menu and the detail toolbar.
 struct ProjectActions: View {
   @Environment(AppModel.self) private var model
   let snapshot: ProjectSnapshot
@@ -70,6 +70,13 @@ struct ProjectActions: View {
       }
       .help("Open \(repository.description) on GitHub")
     }
+    Button {
+      model.openInCodex(snapshot)
+    } label: {
+      Label("Open in Codex", systemImage: "terminal")
+    }
+    .help("Open the project in Codex")
+    .disabled(!snapshot.local.exists || !Codex.isInstalled)
     Button {
       model.openInCursor(snapshot)
     } label: {

@@ -216,6 +216,14 @@ final class AppModel {
     }
   }
 
+  func openInCodex(_ snapshot: ProjectSnapshot) {
+    do {
+      try Codex.openProject(snapshot.project.url)
+    } catch {
+      errorMessage = error.localizedDescription
+    }
+  }
+
   func openInCursor(_ snapshot: ProjectSnapshot) {
     do {
       try Cursor.open(snapshot.project.url)

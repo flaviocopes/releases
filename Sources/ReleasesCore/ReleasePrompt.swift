@@ -189,6 +189,10 @@ public enum Codex {
     try open(promptURL(prompt, in: folder))
   }
 
+  public static func openProject(_ folder: URL) throws {
+    try start(prompt: "", in: folder)
+  }
+
   private static func open(_ url: URL) throws {
     guard isInstalled else { throw CodexError.notInstalled }
     guard Shell.run("/usr/bin/open", [url.absoluteString]).succeeded else {
