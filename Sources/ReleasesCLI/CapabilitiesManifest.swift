@@ -67,6 +67,16 @@ struct CapabilitiesManifest: Encodable {
     ],
     changelog: [
       Release(
+        version: "1.5.0",
+        date: "2026-10-07",
+        changes: [
+          "New releases downloads, with daily counts and --by-day output.",
+          "releases list --waiting and releases recent --first filter projects and releases.",
+          "releases prompt --waiting prepares batch releases; --check asks an agent which projects need one. Prompts open in Codex.",
+          "New capabilities command for agents, with JSON output and release history."
+        ]
+      ),
+      Release(
         version: "1.4.0",
         date: "2026-10-03",
         changes: ["Signed and notarized. The CLI did not change."]

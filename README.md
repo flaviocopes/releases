@@ -12,7 +12,7 @@ Read the announcement and watch the 30-second demo on my blog: [I built Releases
 
 ## Download
 
-Get `Releases-1.4.0.zip` from the [latest release](https://github.com/flaviocopes/releases/releases/latest), unzip it, and drag Releases to your Applications folder. It runs on macOS 14 Sonoma or later, on Apple silicon and Intel Macs.
+Get `Releases-1.5.0.zip` from the [latest release](https://github.com/flaviocopes/releases/releases/latest), unzip it, and drag Releases to your Applications folder. It runs on macOS 14 Sonoma or later, on Apple silicon and Intel Macs.
 
 ### Opening it the first time
 
@@ -179,11 +179,7 @@ open dist/Releases.app
 
 The script builds a universal app in `dist/Releases.app` and registers its `releases://` links. It signs with my Developer ID when that certificate is in the keychain, and ad hoc everywhere else, so your copy is signed ad hoc. You can also run the development build with `swift run ReleasesApp`.
 
-A copy you build yourself opens without a warning on your Mac. If you send it to another Mac, macOS says it "could not verify Releases is free of malware". Click **Done**, then go to **System Settings → Privacy & Security** and click **Open Anyway**, or remove the quarantine flag in Terminal:
-
-```sh
-xattr -dr com.apple.quarantine /Applications/Releases.app
-```
+A copy you build yourself opens without a warning on your Mac. If you send it to another Mac, macOS says it "could not verify Releases is free of malware". Click **Done**, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
 
 To build the release zip, run:
 
@@ -191,7 +187,7 @@ To build the release zip, run:
 ./Scripts/build-release.sh
 ```
 
-It checks that the app has both architectures and that its signature survives the zip, notarizes the zip when the app is Developer ID signed, then writes `dist/Releases-1.4.0.zip`.
+It checks that the app has both architectures and that its signature survives the zip, notarizes the zip when the app is Developer ID signed, then writes `dist/Releases-1.5.0.zip`.
 
 ## Development
 
