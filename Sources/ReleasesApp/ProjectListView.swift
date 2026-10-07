@@ -115,17 +115,15 @@ private struct ProjectRow: View {
           .font(.body.weight(.semibold))
           .lineLimit(1)
 
-        if snapshot.local.hasUncommittedChanges {
-          Label("Waiting for commit", systemImage: "pencil.circle")
-            .font(.caption)
-            .foregroundStyle(.orange)
-        }
-
         if let latest = snapshot.latestRelease {
           HStack(spacing: 4) {
             Text(latest.tag)
               .monospacedDigit()
-            if let date = latest.publishedAt {
+            if snapshot.local.hasUncommittedChanges {
+              Text("·")
+              Text("Waiting for commit")
+                .foregroundStyle(.orange)
+            } else if let date = latest.publishedAt {
               Text("·")
               Text(date, format: .relative(presentation: .named))
             }
@@ -134,9 +132,9 @@ private struct ProjectRow: View {
           .foregroundStyle(.secondary)
           .lineLimit(1)
         } else {
-          Text(snapshot.statusText)
+          Text(snapshot.local.hasUncommittedChanges ? "Waiting for commit" : snapshot.statusText)
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(snapshot.local.hasUncommittedChanges ? Color.orange : Color.secondary)
             .lineLimit(1)
         }
       }
