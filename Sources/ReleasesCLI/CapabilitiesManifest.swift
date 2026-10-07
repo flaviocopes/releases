@@ -33,8 +33,8 @@ struct CapabilitiesManifest: Encodable {
         command: "releases list --waiting --json"
       ),
       Capability(
-        description: "Have an agent in Cursor check which projects waiting to ship need a release",
-        command: "releases prompt --check --cursor"
+        description: "Have an agent in Codex check which projects waiting to ship need a release",
+        command: "releases prompt --check --codex"
       ),
       Capability(
         description: "List the latest releases across every tracked project",
@@ -53,8 +53,8 @@ struct CapabilitiesManifest: Encodable {
         command: "releases discover --json"
       ),
       Capability(
-        description: "Print the release prompt for a project, or open it in Cursor",
-        command: "releases prompt soundscape --bump minor --cursor"
+        description: "Print the release prompt for a project, or open it in Codex",
+        command: "releases prompt soundscape --bump minor --codex"
       ),
       Capability(
         description: "Show a project in the Releases app, or open its Create Release sheet",

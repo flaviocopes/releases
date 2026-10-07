@@ -122,8 +122,8 @@ private struct Header: View {
         .controlSize(.large)
         .disabled(!snapshot.local.exists)
         .help(snapshot.repository == nil
-          ? "Pick the version, then continue in Cursor. The agent creates the GitHub repo too."
-          : "Pick the version, then continue in Cursor")
+          ? "Pick the version, then continue in Codex. The agent creates the GitHub repo too."
+          : "Pick the version, then continue in Codex")
       }
 
       HStack(spacing: 8) {

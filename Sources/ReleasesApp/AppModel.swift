@@ -227,10 +227,10 @@ final class AppModel {
     snapshots.waitingToShip()
   }
 
-  /// One agent in Cursor's Agents window checks which projects waiting to ship are worth a release.
+  /// One agent in Codex checks which projects waiting to ship are worth a release.
   func checkWaitingWithAgent() async {
     do {
-      try await Cursor.startAgent(prompt: ReleasePrompt.check(waitingToShip))
+      try Codex.start(prompt: ReleasePrompt.check(waitingToShip))
     } catch {
       errorMessage = error.localizedDescription
     }
@@ -246,22 +246,22 @@ final class AppModel {
     }
   }
 
-  /// Opens each project in its own Cursor window with its prompt, one after the other.
+  /// Opens the release prompts together in one Codex chat.
   func startReleases(_ releases: [(snapshot: ProjectSnapshot, prompt: String)]) async {
     do {
-      try await Cursor.start(releases.map { (prompt: $0.prompt, folder: $0.snapshot.project.url) })
+      try Codex.start(releases.map { (prompt: $0.prompt, folder: $0.snapshot.project.url) })
     } catch {
       errorMessage = error.localizedDescription
     }
   }
 
-  /// Opens Cursor with the prompt. A project that isn't in the list yet gets added first.
+  /// Opens Codex with the prompt. A project that isn't in the list yet gets added first.
   func startRelease(_ snapshot: ProjectSnapshot, prompt: String) async {
     if !snapshots.contains(where: { $0.id == snapshot.id }) {
       await add([snapshot.project.url])
     }
     do {
-      try await Cursor.start(prompt: prompt, in: snapshot.project.url)
+      try Codex.start(prompt: prompt, in: snapshot.project.url)
     } catch {
       errorMessage = error.localizedDescription
     }

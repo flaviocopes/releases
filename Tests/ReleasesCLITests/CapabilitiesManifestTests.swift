@@ -19,4 +19,16 @@ struct CapabilitiesManifestTests {
   func versionMatchesManifest() {
     #expect(CapabilitiesManifest.current.version == Commands.version)
   }
+
+  @Test
+  func promptOpensCodexWithEitherFlag() throws {
+    let spec = try #require(Commands.spec(for: "prompt"))
+    for flag in ["--codex", "--cursor"] {
+      let arguments = try ParsedArguments.parse(["--check", flag, "--json"], for: spec)
+      #expect(arguments.has("--codex"))
+      #expect(!arguments.has("--cursor"))
+    }
+    let open = try #require(Commands.spec(for: "open"))
+    #expect(try ParsedArguments.parse(["soundscape", "--cursor"], for: open).has("--cursor"))
+  }
 }

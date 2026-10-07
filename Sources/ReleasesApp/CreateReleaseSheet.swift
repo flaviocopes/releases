@@ -20,7 +20,7 @@ struct CreateReleaseSheet: View {
   }
 
   private var subtitle: String {
-    var text = "Cursor opens the project with the prompt in the chat. Nothing runs until you send it."
+    var text = "Codex opens the project with the prompt in the chat. Nothing runs until you send it."
     if !model.snapshots.contains(where: { $0.id == snapshot.id }) {
       text += " The project gets added to your list too."
     }
@@ -185,12 +185,12 @@ struct CreateReleaseSheet: View {
             dismiss()
           }
         } label: {
-          Label("Continue in Cursor", systemImage: "arrow.up.forward.app")
+          Label("Continue in Codex", systemImage: "arrow.up.forward.app")
         }
         .keyboardShortcut(.defaultAction)
         .buttonStyle(.borderedProminent)
-        .disabled(versionProblem != nil || isStarting || !Cursor.isInstalled)
-        .help(Cursor.isInstalled ? "Open the project in Cursor with this prompt" : "Cursor isn't installed")
+        .disabled(versionProblem != nil || isStarting || !Codex.isInstalled)
+        .help(Codex.isInstalled ? "Open the project in Codex with this prompt" : "Codex isn't installed")
       }
     }
     .padding(24)

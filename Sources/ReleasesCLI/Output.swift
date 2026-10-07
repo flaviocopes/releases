@@ -455,14 +455,16 @@ struct PromptJSON: Encodable {
   var version: String
   var tag: String
   var prompt: String
-  var openedInCursor: Bool
+  var openedInCodex: Bool
+  var openedInCursor = false
 }
 
 struct CheckPromptJSON: Encodable {
   var projects: [NameJSON]
   /// Nil when nothing is waiting to ship.
   var prompt: String?
-  var openedInCursor: Bool
+  var openedInCodex: Bool
+  var openedInCursor = false
 }
 
 struct OpenJSON: Encodable {

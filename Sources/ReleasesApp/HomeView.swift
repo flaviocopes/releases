@@ -80,8 +80,8 @@ struct HomeView: View {
             Label("Check with Agent", systemImage: "sparkle.magnifyingglass")
           }
           .labelStyle(.titleAndIcon)
-          .disabled(!Cursor.isInstalled)
-          .help(Cursor.isInstalled ? "Ask an agent in Cursor which of the projects waiting to ship need a release" : "Cursor isn't installed")
+          .disabled(!Codex.isInstalled)
+          .help(Codex.isInstalled ? "Ask an agent in Codex which of the projects waiting to ship need a release" : "Codex isn't installed")
 
           Button {
             model.createReleasesForWaiting()
@@ -89,7 +89,7 @@ struct HomeView: View {
             Label(waiting.count == 1 ? "Create Release…" : "Create \(waiting.count) Releases…", systemImage: "shippingbox")
           }
           .labelStyle(.titleAndIcon)
-          .help("Release every project waiting to ship, each in its own Cursor window")
+          .help("Release every project waiting to ship, in one Codex chat")
         }
       }
     }

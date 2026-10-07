@@ -266,12 +266,41 @@ struct ProjectSnapshotTests {
   }
 
   @Test
-  func cursorDeeplinkEncodesThePrompt() {
-    let url = Cursor.promptURL("Release C++ tools 1.0.0.\nGo & ship")
-    #expect(url.absoluteString.hasPrefix("cursor://anysphere.cursor-deeplink/prompt?text="))
+  func codexDeeplinkEncodesThePromptAndFolder() {
+    let prompt = "Release C++ tools 1.0.0.\nGo & ship #新"
+    let folder = URL(filePath: "/Users/flavio/dev/C++ & Tools")
+    let url = Codex.promptURL(prompt, in: folder)
+    #expect(url.scheme == "codex")
+    #expect(url.host == "new")
     #expect(url.absoluteString.contains("C%2B%2B"))
     #expect(url.absoluteString.contains("%26"))
-    #expect(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first?.value == "Release C++ tools 1.0.0.\nGo & ship")
-    #expect(Cursor.agentsWindowURL.absoluteString == "cursor://anysphere.cursor-deeplink/glass")
+    let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+    #expect(query?.first { $0.name == "prompt" }?.value == prompt)
+    #expect(query?.first { $0.name == "path" }?.value == folder.path)
+    #expect(query?.first { $0.name == "mode" }?.value == "codex")
+    #expect(url.fragment == nil)
+  }
+
+  @Test
+  func codexCheckPromptHasNoProjectFolder() {
+    let url = Codex.promptURL("Check every project.")
+    let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+    #expect(query?.contains { $0.name == "path" } == false)
+    #expect(query?.first { $0.name == "prompt" }?.value == "Check every project.")
+  }
+
+  @Test
+  func codexBatchKeepsEveryPromptInOneDraft() throws {
+    let first = (prompt: "Release Inkwell.\nProject: /Users/flavio/dev/inkwell", folder: URL(filePath: "/Users/flavio/dev/inkwell"))
+    let second = (prompt: "Release Portside.\nProject: /Users/flavio/dev/portside", folder: URL(filePath: "/Users/flavio/dev/portside"))
+    #expect(Codex.releaseURL([]) == nil)
+    #expect(Codex.releaseURL([first]) == Codex.promptURL(first.prompt, in: first.folder))
+    let url = try #require(Codex.releaseURL([first, second]))
+    let query = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems)
+    let prompt = try #require(query.first { $0.name == "prompt" }?.value)
+    #expect(prompt.contains(first.prompt))
+    #expect(prompt.contains(second.prompt))
+    #expect(prompt.contains("one at a time"))
+    #expect(!query.contains { $0.name == "path" })
   }
 }

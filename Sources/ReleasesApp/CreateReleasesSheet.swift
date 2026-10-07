@@ -1,7 +1,7 @@
 import ReleasesCore
 import SwiftUI
 
-/// Releases every project waiting to ship, each in its own Cursor window.
+/// Releases every project waiting to ship, in one Codex chat.
 struct CreateReleasesSheet: View {
   @Environment(AppModel.self) private var model
   @Environment(\.dismiss) private var dismiss
@@ -25,7 +25,7 @@ struct CreateReleasesSheet: View {
       VStack(alignment: .leading, spacing: 2) {
         Text(selected.count == 1 ? "Release 1 app" : "Release \(selected.count) apps")
           .font(.title2.weight(.bold))
-        Text("Cursor opens them one after the other, each in its own window with its prompt in the chat. Nothing runs until you send it.")
+        Text("Codex opens one chat with the prompts for the checked projects. The agent releases them one at a time after you send it.")
           .font(.callout)
           .foregroundStyle(.secondary)
           .fixedSize(horizontal: false, vertical: true)
@@ -68,12 +68,12 @@ struct CreateReleasesSheet: View {
           Task { await model.startReleases(releases) }
           dismiss()
         } label: {
-          Label("Continue in Cursor", systemImage: "arrow.up.forward.app")
+          Label("Continue in Codex", systemImage: "arrow.up.forward.app")
         }
         .keyboardShortcut(.defaultAction)
         .buttonStyle(.borderedProminent)
-        .disabled(selected.isEmpty || !Cursor.isInstalled)
-        .help(Cursor.isInstalled ? "Open the \(selected.count) checked projects in Cursor, each with its prompt" : "Cursor isn't installed")
+        .disabled(selected.isEmpty || !Codex.isInstalled)
+        .help(Codex.isInstalled ? "Open the \(selected.count) checked projects in Codex, each with its prompt" : "Codex isn't installed")
       }
     }
     .padding(24)

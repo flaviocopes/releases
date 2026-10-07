@@ -144,7 +144,7 @@ struct ReleasesCommand {
     }
     reportFetchErrors(all)
     if waitingOnly, snapshots.count > 1 {
-      Output.hint("Run 'releases prompt --check --cursor' to have an agent check which need a release, or 'releases prompt --waiting --cursor' to release them all.")
+      Output.hint("Run 'releases prompt --check --codex' to have an agent check which need a release, or 'releases prompt --waiting --codex' to release them all.")
     } else if !snapshots.isEmpty {
       Output.hint("Run 'releases show <project>' to see every release.")
     }
@@ -345,11 +345,11 @@ struct ReleasesCommand {
     let version = try requestedVersion(options, for: snapshot) ?? snapshot.suggestedVersion
     let text = ReleasePrompt.make(for: snapshot, version: version, notes: options.value("--notes") ?? "")
 
-    if options.has("--cursor") {
+    if options.has("--codex") {
       if !isTracked {
         _ = try await tracker.add(snapshot.project.url)
       }
-      try await Cursor.start(prompt: text, in: snapshot.project.url)
+      try Codex.start(prompt: text, in: snapshot.project.url)
     }
 
     if options.has("--json") {
@@ -359,10 +359,10 @@ struct ReleasesCommand {
         version: version.description,
         tag: version.tag,
         prompt: text,
-        openedInCursor: options.has("--cursor")
+        openedInCodex: options.has("--codex")
       ))
-    } else if options.has("--cursor") {
-      print("Opened \(snapshot.name) in Cursor. Review the prompt in the chat and send it.")
+    } else if options.has("--codex") {
+      print("Opened \(snapshot.name) in Codex. Review the prompt in the chat and send it.")
     } else {
       print(text)
     }
@@ -382,8 +382,8 @@ struct ReleasesCommand {
       return (snapshot: snapshot, version: version, prompt: ReleasePrompt.make(for: snapshot, version: version, notes: options.value("--notes") ?? ""))
     }
 
-    if options.has("--cursor"), !releases.isEmpty {
-      try await Cursor.start(releases.map { (prompt: $0.prompt, folder: $0.snapshot.project.url) })
+    if options.has("--codex"), !releases.isEmpty {
+      try Codex.start(releases.map { (prompt: $0.prompt, folder: $0.snapshot.project.url) })
     }
 
     if options.has("--json") {
@@ -394,13 +394,13 @@ struct ReleasesCommand {
           version: release.version.description,
           tag: release.version.tag,
           prompt: release.prompt,
-          openedInCursor: options.has("--cursor")
+          openedInCodex: options.has("--codex")
         )
       })
     } else if releases.isEmpty {
       print("Nothing is waiting to ship.")
-    } else if options.has("--cursor") {
-      print("Opened \(releases.map(\.snapshot.name).joined(separator: ", ")) in Cursor, each in its own window. Review each prompt in its chat and send it.")
+    } else if options.has("--codex") {
+      print("Opened \(releases.map(\.snapshot.name).joined(separator: ", ")) in Codex with their release prompts. Review the draft and send it.")
     } else {
       print(releases.map(\.prompt).joined(separator: "\n\n---\n\n"))
     }
@@ -414,18 +414,18 @@ struct ReleasesCommand {
     let waiting = try await tracker.refresh(maxAge: cacheAge).waitingToShip()
     let text = waiting.isEmpty ? nil : ReleasePrompt.check(waiting, notes: options.value("--notes") ?? "")
 
-    if options.has("--cursor"), let text {
-      try await Cursor.startAgent(prompt: text)
+    if options.has("--codex"), let text {
+      try Codex.start(prompt: text)
     }
 
     if options.has("--json") {
       try Output.json(CheckPromptJSON(
         projects: waiting.map { NameJSON(name: $0.name, path: $0.project.path) },
         prompt: text,
-        openedInCursor: options.has("--cursor") && text != nil
+        openedInCodex: options.has("--codex") && text != nil
       ))
     } else if let text {
-      print(options.has("--cursor") ? "Opened Cursor's Agents window with a prompt to check \(waiting.count == 1 ? "1 project" : "\(waiting.count) projects"). Review it and send it." : text)
+      print(options.has("--codex") ? "Opened Codex with a prompt to check \(waiting.count == 1 ? "1 project" : "\(waiting.count) projects"). Review it and send it." : text)
     } else {
       print("Nothing is waiting to ship.")
     }

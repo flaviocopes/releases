@@ -2,7 +2,7 @@
 
 Releases is a Mac app that keeps track of the apps you make: their versions, their GitHub releases, and what's waiting to ship. Open it and you see every release of every project, newest first, with what changed and how many people downloaded it.
 
-GitHub shows one repo at a time. When you build a lot of small apps, it's easy to lose track of which ones have changes waiting for a release. Releases puts all of them in one window, and **Create Release** starts the next one in Cursor.
+GitHub shows one repo at a time. When you build a lot of small apps, it's easy to lose track of which ones have changes waiting for a release. Releases puts all of them in one window, and **Create Release** opens the next release prompt in Codex.
 
 It comes with a `releases` command that does everything the app does, so a coding agent can do it too.
 
@@ -38,7 +38,7 @@ defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
 - What changed comes from the project's `CHANGELOG.md`, or from the "What's new" part of the release notes on GitHub
 - The **Waiting to Ship** tab lists the projects with commits since their last release, or with a version newer than the last release, the most commits first, with the commits waiting to go out. **Check with Agent** asks your coding agent which of them are worth a release
 - Each project shows its version and the file it comes from, its branch, the commits you haven't pushed or released, and every release with its downloads
-- **Create Release** suggests the next version, writes the prompt for your coding agent, and opens it in Cursor. Nothing runs until you send it. **Create Releases** does it for every project waiting to ship
+- **Create Release** suggests the next version, writes the prompt for your coding agent, and opens it in Codex. Nothing runs until you send it. **Create Releases** does it for every project waiting to ship
 - Add a project by dropping its folder on the window, or with `releases add`. **Add More…** lists the apps and command-line tools next to your projects that aren't in the list yet
 - The name and the icon come from the app you built, in `dist/` or `build/`. Double-click a project's name to give it another one, in Releases only
 - Open a project on GitHub, in Cursor, in GitHub Desktop or in the Finder from its page
@@ -72,15 +72,15 @@ Releases reads the version from the first of these it finds:
 
 Click **Create Release…** on a project, or next to it in the **Waiting to Ship** tab. Pick the version, or bump the latest release with the **Patch**, **Minor** and **Major** buttons, and add anything else the agent should know.
 
-**Continue in Cursor** opens the project in Cursor and puts the prompt in the chat. Cursor never runs it on its own, so you can read it and send it when you're ready. **Copy Prompt** copies it for any other agent.
+**Continue in Codex** opens a chat for the project with the prompt ready to review. Nothing runs until you send it. **Copy Prompt** copies it for any other agent.
 
 The prompt has the project, its GitHub repo, the version, and the commits since the last release. It asks the agent to use a skill called `open-source-release` when it has one. That's the skill I use to publish my apps, and you can write your own with that name. Without it, the prompt lists the steps: set the version, tag it, build the app, and publish the GitHub release.
 
 It works for projects that aren't on GitHub yet, too. The prompt then asks the agent to create the repo first.
 
-When more than one project is waiting to ship, click **Create Releases…** in the toolbar of Latest Releases to release them all. Each one gets its next patch version, or the version in the project when it's newer, and you can pick another or uncheck the ones to leave for later. **Continue in Cursor** opens them one after the other, each in its own window with its own prompt.
+When more than one project is waiting to ship, click **Create Releases…** in the toolbar of Latest Releases to release them all. Each one gets its next patch version, or the version in the project when it's newer, and you can pick another or uncheck the ones to leave for later. **Continue in Codex** opens one Codex chat with all the prompts. After you send it, the agent releases the projects one at a time.
 
-Not sure which ones deserve a release? Click **Check with Agent** instead. It opens a new agent in Cursor's Agents window with one prompt that lists the folder of every project waiting to ship. The agent looks at what changed in each one, and tells you which to release, with the version, and which to skip, since a README tweak or a CI change alone doesn't need a release. It waits for your go-ahead before releasing anything.
+Not sure which ones deserve a release? Click **Check with Agent** instead. It opens a new Codex chat with one prompt that lists the folder of every project waiting to ship. The agent looks at what changed in each one, and tells you which to release, with the version, and which to skip, since a README tweak or a CI change alone doesn't need a release. It waits for your go-ahead before releasing anything.
 
 ## Adding projects
 
@@ -119,7 +119,7 @@ Pass another folder to install it somewhere else, like `./Scripts/install-cli.sh
 | `releases discover` | The apps on this Mac that aren't in the list, like Add Projects in the app |
 | `releases hide <project>` | Leaves a project out of Add Projects |
 | `releases unhide <folder>` | Brings a hidden project back |
-| `releases prompt <project>` | Prints the release prompt, or opens it in Cursor with `--cursor`. `--waiting` does it for every project waiting to ship, and `--check` asks one agent which of them need a release |
+| `releases prompt <project>` | Prints the release prompt, or opens it in Codex with `--codex` (`--cursor` is a legacy alias). `--waiting` does it for every project waiting to ship, and `--check` asks one agent which of them need a release |
 | `releases open <project>` | Shows a project in the app, or opens it on GitHub, in Cursor, in GitHub Desktop or in the Finder |
 | `releases rename <project> <name>` | Gives a project another name in Releases, or `--reset` to go back |
 | `releases refresh` | Fetches every release from GitHub now |
@@ -130,7 +130,7 @@ A project is its folder path, its folder name, its app name, or its GitHub repo.
 
 ```sh
 releases show inkwell
-releases prompt inkwell --bump minor --cursor
+releases prompt inkwell --bump minor --codex
 releases discover --offline
 ```
 
@@ -146,7 +146,7 @@ Every command takes `--json`. `releases help --json` lists every command and its
 releases open inkwell --release --bump minor --notes "Mention the new Tags feature first"
 ```
 
-The sheet waits for you. Nothing gets released until you click **Continue in Cursor** and send the prompt.
+The sheet waits for you. Nothing gets released until you click **Continue in Codex** and send the prompt.
 
 `releases open` works through the app's `releases://` links, so open the app once first, which tells macOS about them. The links are `releases://home`, `releases://project?path=…`, `releases://release?path=…&version=…&notes=…` and `releases://refresh`.
 

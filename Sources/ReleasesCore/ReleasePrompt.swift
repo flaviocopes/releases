@@ -1,8 +1,9 @@
+import CoreServices
 import Foundation
 
 /// The prompt that asks an agent to publish a release.
 public enum ReleasePrompt {
-  /// Commits listed in the prompt. Cursor's deeplinks stop at 10,000 characters.
+  /// Keeps the prompt short; the agent can read the full git log in the project.
   static let maxCommits = 30
 
   public static func make(for snapshot: ProjectSnapshot, version: SemanticVersion, notes: String = "") -> String {
@@ -66,8 +67,7 @@ public enum ReleasePrompt {
     return lines.joined(separator: "\n")
   }
 
-  /// The prompt that asks one agent which of the projects waiting to ship are worth a release. It runs in
-  /// Cursor's Agents window, which can't be pointed at a folder, so it names every folder.
+  /// Asks one agent which projects are worth a release, naming every folder.
   public static func check(_ snapshots: [ProjectSnapshot], notes: String = "") -> String {
     var lines = [
       "Check which of my projects need a new release. Each one has changes since its last release on GitHub:",
@@ -133,33 +133,14 @@ public enum CursorError: LocalizedError, Sendable {
   }
 }
 
-/// Opens a project in Cursor with a prompt ready in the chat, or a prompt in a new agent in the Agents window.
-/// Cursor asks before running it.
+/// Opens a project in the editor.
 public enum Cursor {
   static let bundleIdentifier = "com.todesktop.230313mzl4w4u92"
-
-  /// Opens or focuses the Agents window.
-  public static let agentsWindowURL = URL(string: "cursor://anysphere.cursor-deeplink/glass")!
-
-  static var isRunning: Bool {
-    Shell.run("/usr/bin/pgrep", ["-f", "Cursor.app/Contents/MacOS/Cursor"]).succeeded
-  }
 
   public static var isInstalled: Bool {
     let home = FileManager.default.homeDirectoryForCurrentUser.path
     return ["/Applications/Cursor.app", "\(home)/Applications/Cursor.app"]
       .contains { FileManager.default.fileExists(atPath: $0) }
-  }
-
-  /// `cursor://anysphere.cursor-deeplink/prompt?text=…`. `+` is encoded too, or it would turn into a space.
-  public static func promptURL(_ prompt: String) -> URL {
-    var components = URLComponents()
-    components.scheme = "cursor"
-    components.host = "anysphere.cursor-deeplink"
-    components.path = "/prompt"
-    components.queryItems = [URLQueryItem(name: "text", value: prompt)]
-    components.percentEncodedQuery = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
-    return components.url!
   }
 
   public static func open(_ folder: URL) throws {
@@ -169,38 +150,64 @@ public enum Cursor {
     }
   }
 
-  /// The deeplink can't pick a window, so the folder opens first and the prompt follows once its window is in front.
-  public static func start(prompt: String, in folder: URL, delay: Duration = .milliseconds(1500)) async throws {
-    try open(folder)
-    try await Task.sleep(for: delay)
-    guard Shell.run("/usr/bin/open", [promptURL(prompt).absoluteString]).succeeded else {
-      throw CursorError.couldNotOpen
+}
+
+public enum CodexError: LocalizedError, Sendable {
+  case notInstalled
+  case couldNotOpen
+
+  public var errorDescription: String? {
+    switch self {
+    case .notInstalled: "Codex isn't installed. Copy the prompt instead."
+    case .couldNotOpen: "Codex didn't open."
+    }
+  }
+}
+
+/// Opens Codex with a draft prompt. The user reviews it and sends it.
+public enum Codex {
+  public static var isInstalled: Bool {
+    LSCopyDefaultApplicationURLForURL(URL(string: "codex://")! as CFURL, .all, nil) != nil
+  }
+
+  public static func promptURL(_ prompt: String, in folder: URL? = nil) -> URL {
+    var components = URLComponents()
+    components.scheme = "codex"
+    components.host = "new"
+    components.queryItems = [
+      URLQueryItem(name: "mode", value: "codex"),
+      URLQueryItem(name: "prompt", value: prompt)
+    ]
+    if let folder {
+      components.queryItems?.append(URLQueryItem(name: "path", value: folder.path))
+    }
+    components.percentEncodedQuery = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+    return components.url!
+  }
+
+  public static func start(prompt: String, in folder: URL? = nil) throws {
+    try open(promptURL(prompt, in: folder))
+  }
+
+  private static func open(_ url: URL) throws {
+    guard isInstalled else { throw CodexError.notInstalled }
+    guard Shell.run("/usr/bin/open", [url.absoluteString]).succeeded else {
+      throw CodexError.couldNotOpen
     }
   }
 
-  /// Cursor hands a prompt link to the window in front, and the Agents window turns it into a new agent.
-  /// So the Agents window opens first, and the prompt follows once it's in front, later when Cursor has to start.
-  /// The Agents window ignores the link's workspace, so the prompt names the folders.
-  public static func startAgent(prompt: String) async throws {
-    guard isInstalled else { throw CursorError.notInstalled }
-    let wasRunning = isRunning
-    guard Shell.run("/usr/bin/open", [agentsWindowURL.absoluteString]).succeeded else {
-      throw CursorError.couldNotOpen
-    }
-    try await Task.sleep(for: wasRunning ? .seconds(2) : .seconds(6))
-    guard Shell.run("/usr/bin/open", [promptURL(prompt).absoluteString]).succeeded else {
-      throw CursorError.couldNotOpen
+  /// One draft keeps later links from replacing earlier prompts in Codex's composer.
+  static func releaseURL(_ releases: [(prompt: String, folder: URL)]) -> URL? {
+    guard let first = releases.first else { return nil }
+    if releases.count == 1 {
+      return promptURL(first.prompt, in: first.folder)
+    } else {
+      return promptURL("Release these projects one at a time. Each section names its project folder.\n\n" + releases.map(\.prompt).joined(separator: "\n\n---\n\n"))
     }
   }
 
-  /// Each release in its own window. Cursor needs the pause to take a prompt before the next
-  /// folder comes to the front, or the prompt lands in the wrong window.
-  public static func start(_ releases: [(prompt: String, folder: URL)], pause: Duration = .seconds(2)) async throws {
-    for (index, release) in releases.enumerated() {
-      if index > 0 {
-        try await Task.sleep(for: pause)
-      }
-      try await start(prompt: release.prompt, in: release.folder)
-    }
+  public static func start(_ releases: [(prompt: String, folder: URL)]) throws {
+    guard let url = releaseURL(releases) else { return }
+    try open(url)
   }
 }

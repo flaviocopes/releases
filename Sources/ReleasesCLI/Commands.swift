@@ -107,24 +107,24 @@ enum Commands {
     CommandSpec(
       name: "prompt",
       summary: "Print the prompt that asks an agent to publish the next release, or to check which projects need one.",
-      usage: "releases prompt (<project> | --waiting | --check) [--version <x.y.z> | --bump <patch|minor|major>] [--notes <text>] [--cursor] [--json]",
+      usage: "releases prompt (<project> | --waiting | --check) [--version <x.y.z> | --bump <patch|minor|major>] [--notes <text>] [--codex] [--json]",
       options: [
         Option(name: "--waiting", help: "A prompt for every project waiting to ship, like Create Releases in the app."),
         Option(name: "--check", help: "One prompt that asks an agent which projects waiting to ship need a release, like Check with Agent in the app."),
         versionOption,
         bump,
         notes,
-        Option(name: "--cursor", help: "Open the project in Cursor with the prompt in the chat. Adds it to the list too."),
+        Option(name: "--codex", help: "Open the prompt in Codex. Adds a single project to the list too. --cursor is a legacy alias.", aliases: ["--cursor"]),
         json
       ],
       details: """
         Without --version or --bump, the version is the project's own when it's newer
         than the latest release, or the next patch otherwise.
-        With --waiting, --bump and --notes apply to every project, and --cursor opens
-        them one after the other, each in its own window.
+        With --waiting, --bump and --notes apply to every project, and --codex opens
+        one chat with all the prompts, to release them one at a time.
         With --check, the prompt lists the folders of every project waiting to ship, the
         most commits first. The agent picks the ones worth a release and their versions, and
-        waits for your go-ahead. --cursor opens it in a new agent in Cursor's Agents window.
+        waits for your go-ahead. --codex opens it in a new Codex chat.
         """
     ),
     CommandSpec(
@@ -219,13 +219,13 @@ enum Commands {
         releases add ~/dev/soundscape      Track a project.
         releases list                      See every project and its latest release.
         releases list --waiting            See the projects waiting to ship, the most commits first.
-        releases prompt --check --cursor   Have an agent check which of them need a release.
+        releases prompt --check --codex   Have an agent check which of them need a release.
         releases recent                    See the latest releases across all projects.
         releases recent --first            See when each app launched.
         releases downloads                 See how many times each app was downloaded.
         releases discover                  See the apps on this Mac that aren't released yet.
         releases show soundscape           See all the releases of one project.
-        releases prompt soundscape --bump minor --cursor
+        releases prompt soundscape --bump minor --codex
 
       For agents:
         releases help --json               Every command and option, as JSON.
