@@ -69,7 +69,7 @@ enum Output {
         snapshot.local.version?.version ?? "-",
         snapshot.latestRelease?.tag ?? "-",
         date(snapshot.latestRelease?.publishedAt),
-        snapshot.statusText
+        snapshot.statusText + (snapshot.local.hasUncommittedChanges ? " · Waiting for commit" : "")
       ]
     }
     if isTerminal {

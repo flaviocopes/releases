@@ -108,6 +108,12 @@ private struct ProjectRow: View {
           .font(.body.weight(.semibold))
           .lineLimit(1)
 
+        if snapshot.local.hasUncommittedChanges {
+          Label("Waiting for commit", systemImage: "pencil.circle")
+            .font(.caption)
+            .foregroundStyle(.orange)
+        }
+
         if let latest = snapshot.latestRelease {
           HStack(spacing: 4) {
             Text(latest.tag)

@@ -230,6 +230,9 @@ private struct WaitingList: View {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                   Text(snapshot.name)
                     .fontWeight(.semibold)
+                  if snapshot.local.hasUncommittedChanges {
+                    Tag(text: "Waiting for commit", color: .orange)
+                  }
                   Label(snapshot.statusText, systemImage: snapshot.status.symbol)
                     .font(.callout)
                     .foregroundStyle(snapshot.status.color)

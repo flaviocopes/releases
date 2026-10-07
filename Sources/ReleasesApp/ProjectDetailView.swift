@@ -150,7 +150,7 @@ private struct Header: View {
               Tag(text: unpushed == 1 ? "1 not pushed" : "\(unpushed) not pushed", color: .orange)
             }
             if snapshot.local.hasUncommittedChanges {
-              Tag(text: "uncommitted changes", color: .orange)
+              Tag(text: "Waiting for commit", color: .orange)
             }
           }
         }
