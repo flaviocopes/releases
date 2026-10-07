@@ -113,17 +113,35 @@ private struct Header: View {
 
         Spacer()
 
-        Button {
-          model.createRelease(snapshot)
-        } label: {
-          Label("Create Release…", systemImage: "shippingbox")
+        VStack(alignment: .trailing, spacing: 8) {
+          if snapshot.local.hasUncommittedChanges {
+            Button {
+              model.openInCodex(snapshot)
+            } label: {
+              Label {
+                Text("Commit Changes in Codex")
+              } icon: {
+                CodexIcon()
+              }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+            .disabled(!snapshot.local.exists || !Codex.isInstalled)
+            .help("Open Codex with a Commit changes prompt to review and send")
+          }
+
+          Button {
+            model.createRelease(snapshot)
+          } label: {
+            Label("Create Release…", systemImage: "shippingbox")
+          }
+          .buttonStyle(.borderedProminent)
+          .controlSize(.large)
+          .disabled(!snapshot.local.exists)
+          .help(snapshot.repository == nil
+            ? "Pick the version, then continue in Codex. The agent creates the GitHub repo too."
+            : "Pick the version, then continue in Codex")
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .disabled(!snapshot.local.exists)
-        .help(snapshot.repository == nil
-          ? "Pick the version, then continue in Codex. The agent creates the GitHub repo too."
-          : "Pick the version, then continue in Codex")
       }
 
       HStack(spacing: 8) {

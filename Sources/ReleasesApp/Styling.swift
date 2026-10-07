@@ -2,6 +2,25 @@ import AppKit
 import ReleasesCore
 import SwiftUI
 
+struct CodexIcon: View {
+  private var image: Image {
+    #if RELEASES_SCREENSHOT
+    let bundle = Bundle.main
+    #else
+    let bundle = Bundle.module
+    #endif
+    return Image(nsImage: NSImage(contentsOf: bundle.url(forResource: "CodexLogo", withExtension: "png")!)!)
+  }
+
+  var body: some View {
+    image
+      .renderingMode(.original)
+      .resizable()
+      .frame(width: 18, height: 18)
+      .accessibilityHidden(true)
+  }
+}
+
 extension ReleaseStatus {
   var color: Color {
     switch self {

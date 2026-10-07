@@ -20,7 +20,8 @@ let package = Package(
     ),
     .executableTarget(
       name: "ReleasesApp",
-      dependencies: ["ReleasesCore"]
+      dependencies: ["ReleasesCore"],
+      resources: [.process("Resources")]
     ),
     .testTarget(
       name: "ReleasesCoreTests",

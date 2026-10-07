@@ -73,7 +73,11 @@ struct ProjectActions: View {
     Button {
       model.openInCodex(snapshot)
     } label: {
-      Label("Open in Codex", systemImage: "terminal")
+      Label {
+        Text("Open in Codex")
+      } icon: {
+        CodexIcon()
+      }
     }
     .help("Open the project in Codex")
     .disabled(!snapshot.local.exists || !Codex.isInstalled)

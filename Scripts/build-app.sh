@@ -20,6 +20,7 @@ swift build -c release --arch arm64 --arch x86_64 --product ReleasesApp
 rm -rf "$APP"
 mkdir -p "$MACOS" "$RESOURCES"
 cp ".build/apple/Products/Release/ReleasesApp" "$MACOS/Releases"
+cp -R ".build/apple/Products/Release/Releases_ReleasesApp.bundle" "$RESOURCES/"
 
 ICON_KEY=""
 if [ -f "$ICON_SOURCE" ]; then

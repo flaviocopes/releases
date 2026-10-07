@@ -15,11 +15,13 @@ TARGET="$(uname -m)-apple-macos14.0"
 
 rm -rf "$BUILD"
 mkdir -p "$APP/Contents/MacOS" docs
+mkdir -p "$APP/Contents/Resources"
+cp Sources/ReleasesApp/Resources/CodexLogo.png "$APP/Contents/Resources/"
 swiftc -O -swift-version 6 -parse-as-library -target "$TARGET" -module-name ReleasesCore \
   -emit-library -static -emit-module -emit-module-path "$BUILD/ReleasesCore.swiftmodule" \
   -o "$BUILD/libReleasesCore.a" Sources/ReleasesCore/*.swift
 find Sources/ReleasesApp -name '*.swift' ! -exec grep -q '^@main' {} \; -exec \
-  swiftc -O -swift-version 6 -parse-as-library -target "$TARGET" -I "$BUILD" -L "$BUILD" -lReleasesCore \
+  swiftc -O -swift-version 6 -D RELEASES_SCREENSHOT -parse-as-library -target "$TARGET" -I "$BUILD" -L "$BUILD" -lReleasesCore \
   -o "$APP/Contents/MacOS/Screenshot" Scripts/screenshot.swift {} +
 
 cat > "$APP/Contents/Info.plist" <<PLIST
