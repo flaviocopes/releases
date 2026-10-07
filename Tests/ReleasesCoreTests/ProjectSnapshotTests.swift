@@ -285,6 +285,17 @@ struct ProjectSnapshotTests {
   }
 
   @Test
+  func codexProjectPromptMatchesUncommittedChanges() {
+    var project = snapshot()
+    for dirty in [false, true] {
+      project.local.hasUncommittedChanges = dirty
+      let query = URLComponents(url: Codex.projectURL(project), resolvingAgainstBaseURL: false)?.queryItems
+      #expect(query?.first { $0.name == "prompt" }?.value == (dirty ? "Commit changes" : ""))
+      #expect(query?.first { $0.name == "path" }?.value == project.project.path)
+    }
+  }
+
+  @Test
   func codexCheckPromptHasNoProjectFolder() {
     let url = Codex.promptURL("Check every project.")
     let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems

@@ -218,7 +218,7 @@ final class AppModel {
 
   func openInCodex(_ snapshot: ProjectSnapshot) {
     do {
-      try Codex.openProject(snapshot.project.url)
+      try Codex.openProject(snapshot)
     } catch {
       errorMessage = error.localizedDescription
     }

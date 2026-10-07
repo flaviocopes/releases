@@ -189,8 +189,12 @@ public enum Codex {
     try open(promptURL(prompt, in: folder))
   }
 
-  public static func openProject(_ folder: URL) throws {
-    try start(prompt: "", in: folder)
+  static func projectURL(_ snapshot: ProjectSnapshot) -> URL {
+    promptURL(snapshot.local.hasUncommittedChanges ? "Commit changes" : "", in: snapshot.project.url)
+  }
+
+  public static func openProject(_ snapshot: ProjectSnapshot) throws {
+    try open(projectURL(snapshot))
   }
 
   private static func open(_ url: URL) throws {

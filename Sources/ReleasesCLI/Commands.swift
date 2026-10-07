@@ -137,7 +137,7 @@ enum Commands {
         bump,
         notes,
         Option(name: "--github", help: "Open the project on GitHub."),
-        Option(name: "--codex", help: "Open the project in Codex with an empty prompt."),
+        Option(name: "--codex", help: "Open the project in Codex. Prefills Commit changes when it has uncommitted changes."),
         Option(name: "--cursor", help: "Open the project in Cursor."),
         Option(name: "--github-desktop", help: "Open the project in GitHub Desktop."),
         Option(name: "--finder", help: "Show the project folder in the Finder."),

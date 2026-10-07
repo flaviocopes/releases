@@ -458,7 +458,7 @@ struct ReleasesCommand {
       try openURL(repository.url)
       try report(options, OpenJSON(opened: "github", project: snapshot.name, path: path, url: repository.url), "Opened \(repository.url.absoluteString).")
     case "--codex":
-      try Codex.openProject(snapshot.project.url)
+      try Codex.openProject(snapshot)
       try report(options, OpenJSON(opened: "codex", project: snapshot.name, path: path, url: nil), "Opened \(snapshot.name) in Codex.")
     case "--cursor":
       try Cursor.open(snapshot.project.url)
