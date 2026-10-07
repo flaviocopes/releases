@@ -42,6 +42,8 @@ Set `RELEASES_STORE=/tmp/releases-test/projects.json` to try things without touc
 
 ## Working on the code
 
+- Default to a minor release every time. `ProjectSnapshot.suggestedVersion` uses the next minor version, preserving a higher version already set in the project. Patch and major bumps require an explicit choice.
+
 - Add logic to `ReleasesCore` and cover it with a test. Keep the CLI and the app thin.
 - Everything a person can do in the app has a CLI command, so agents can do it too. Add new actions to both, give the command `--json`, and declare it in `Commands.all`.
 - New fields on `TrackedProject`, `Release` and `ProjectList` must be optional, so old `projects.json` files still decode.

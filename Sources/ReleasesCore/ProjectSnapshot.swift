@@ -97,11 +97,11 @@ public struct ProjectSnapshot: Identifiable, Hashable, Sendable {
     status == .unreleasedChanges || status == .readyToRelease
   }
 
-  /// The version to propose for the next release.
+  /// Defaults to the next minor release, preserving a higher version set in the project.
   public var suggestedVersion: SemanticVersion {
     switch (localVersion, latestRelease?.version) {
-    case let (local?, released?) where local > released: local
-    case let (_, released?): released.bumped(.patch)
+    case let (local?, released?) where local > released.bumped(.minor): local
+    case let (_, released?): released.bumped(.minor)
     case let (local?, nil): local
     case (nil, nil): SemanticVersion(major: 1, minor: 0, patch: 0)
     }

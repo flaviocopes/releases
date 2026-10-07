@@ -87,6 +87,7 @@ struct ProjectSnapshotTests {
     #expect(prompt.hasPrefix("Check which of my projects need a new release."))
     #expect(prompt.contains("- Snake, /Users/flavio/dev/snake: 2 commits since v1.0.0, version already set to 1.1.0, uncommitted changes\n- Blueprint, /Users/flavio/dev/blueprint: 1 commit since v1.0.2"))
     #expect(prompt.contains("Wait for my go-ahead"))
+    #expect(prompt.contains("Default to a minor release every time"))
     #expect(prompt.contains("\"Later releases\" steps of the open-source-release skill"))
     #expect(prompt.contains("ask me whether they belong in the release"))
     #expect(prompt.hasSuffix("Skip Blueprint this week."))
@@ -128,8 +129,10 @@ struct ProjectSnapshotTests {
 
   @Test
   func suggestsTheNextVersion() {
-    #expect(snapshot(version: "1.0.2", releases: [release("v1.0.2")]).suggestedVersion.description == "1.0.3")
+    #expect(snapshot(version: "1.0.2", releases: [release("v1.0.2")]).suggestedVersion.description == "1.1.0")
     #expect(snapshot(version: "1.1.0", releases: [release("v1.0.2")]).suggestedVersion.description == "1.1.0")
+    #expect(snapshot(version: "1.0.3", releases: [release("v1.0.2")]).suggestedVersion.description == "1.1.0")
+    #expect(snapshot(version: "2.0.0", releases: [release("v1.0.2")]).suggestedVersion.description == "2.0.0")
     #expect(snapshot(version: "1.0.0", releases: []).suggestedVersion.description == "1.0.0")
     #expect(snapshot(version: nil, releases: []).suggestedVersion.description == "1.0.0")
   }

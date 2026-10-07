@@ -70,7 +70,7 @@ Releases reads the version from the first of these it finds:
 
 ## Creating a release
 
-Click **Create Release…** on a project, or next to it in the **Waiting to Ship** tab. Pick the version, or bump the latest release with the **Patch**, **Minor** and **Major** buttons, and add anything else the agent should know.
+Click **Create Release…** on a project, or next to it in the **Waiting to Ship** tab. The next minor version is selected by default. Pick the version, or bump the latest release with the **Patch**, **Minor** and **Major** buttons, and add anything else the agent should know.
 
 **Continue in Codex** opens a chat for the project with the prompt ready to review. Nothing runs until you send it. **Copy Prompt** copies it for any other agent.
 
@@ -78,7 +78,7 @@ The prompt has the project, its GitHub repo, the version, and the commits since 
 
 It works for projects that aren't on GitHub yet, too. The prompt then asks the agent to create the repo first.
 
-When more than one project is waiting to ship, click **Create Releases…** in the toolbar of Latest Releases to release them all. Each one gets its next patch version, or the version in the project when it's newer, and you can pick another or uncheck the ones to leave for later. **Continue in Codex** opens one Codex chat with all the prompts. After you send it, the agent releases the projects one at a time.
+When more than one project is waiting to ship, click **Create Releases…** in the toolbar of Latest Releases to release them all. Each one gets its next minor version, or the version in the project when it's higher than that, and you can pick another or uncheck the ones to leave for later. **Continue in Codex** opens one Codex chat with all the prompts. After you send it, the agent releases the projects one at a time.
 
 Not sure which ones deserve a release? Click **Check with Agent** instead. It opens a new Codex chat with one prompt that lists the folder of every project waiting to ship. The agent looks at what changed in each one, and tells you which to release, with the version, and which to skip, since a README tweak or a CI change alone doesn't need a release. It waits for your go-ahead before releasing anything.
 

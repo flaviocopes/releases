@@ -97,7 +97,7 @@ public enum ReleasePrompt {
     )
     lines.append("")
     lines.append(
-      "Then give me a short list: the projects to release, each with the version you'd pick (patch, minor or major) and why, and the ones to skip. Wait for my go-ahead, then release them one at a time, following the \"Later releases\" steps of the open-source-release skill if you have it."
+      "Then give me a short list: the projects to release, each with the version you'd pick and why, and the ones to skip. Default to a minor release every time unless I explicitly request another bump. Wait for my go-ahead, then release them one at a time, following the \"Later releases\" steps of the open-source-release skill if you have it."
     )
 
     if snapshots.contains(where: \.local.hasUncommittedChanges) {

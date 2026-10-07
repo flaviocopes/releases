@@ -118,8 +118,8 @@ enum Commands {
         json
       ],
       details: """
-        Without --version or --bump, the version is the project's own when it's newer
-        than the latest release, or the next patch otherwise.
+        Without --version or --bump, the version is the next minor release, or the project's own
+        when it's higher than that.
         With --waiting, --bump and --notes apply to every project, and --codex opens
         one chat with all the prompts, to release them one at a time.
         With --check, the prompt lists the folders of every project waiting to ship, the
