@@ -33,6 +33,11 @@ final class AppModel {
   var releaseDraft: ReleaseDraft?
   /// The sheet that releases every project waiting to ship at once.
   var showsCreateReleases = false
+  var skippedReleaseProjects: Set<ProjectSnapshot.ID> = Set(UserDefaults.standard.stringArray(forKey: "skippedReleaseProjects") ?? []) {
+    didSet {
+      UserDefaults.standard.set(Array(skippedReleaseProjects).sorted(), forKey: "skippedReleaseProjects")
+    }
+  }
   var showsAddProjects = false
   /// True while the app looks for projects on disk.
   private(set) var isDiscovering = false

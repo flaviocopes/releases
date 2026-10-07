@@ -8,12 +8,11 @@ struct CreateReleasesSheet: View {
 
   let snapshots: [ProjectSnapshot]
 
-  @State private var skipped: Set<ProjectSnapshot.ID> = []
   @State private var versions: [ProjectSnapshot.ID: SemanticVersion] = [:]
   @State private var notes = ""
 
   private var selected: [ProjectSnapshot] {
-    snapshots.filter { !skipped.contains($0.id) }
+    snapshots.filter { !model.skippedReleaseProjects.contains($0.id) }
   }
 
   private func version(of snapshot: ProjectSnapshot) -> SemanticVersion {
@@ -82,9 +81,9 @@ struct CreateReleasesSheet: View {
 
   private func row(_ snapshot: ProjectSnapshot) -> some View {
     let isIncluded = Binding(
-      get: { !skipped.contains(snapshot.id) },
+      get: { !model.skippedReleaseProjects.contains(snapshot.id) },
       set: { included in
-        if included { skipped.remove(snapshot.id) } else { skipped.insert(snapshot.id) }
+        if included { model.skippedReleaseProjects.remove(snapshot.id) } else { model.skippedReleaseProjects.insert(snapshot.id) }
       }
     )
     let version = Binding(
