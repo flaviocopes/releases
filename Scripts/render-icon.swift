@@ -1,5 +1,5 @@
 #!/usr/bin/env swift
-// Renders the Releases app icon: a shipping box with a version tag hanging from its corner,
+// Renders the Releases Manager app icon: a shipping box with a version tag hanging from its corner,
 // baked into a 1024px squircle on Apple's macOS icon grid. Scripts/build-app.sh turns it into AppIcon.icns.
 // Usage: swift Scripts/render-icon.swift Assets/AppIcon.png
 

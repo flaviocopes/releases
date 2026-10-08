@@ -48,7 +48,7 @@ public actor ProjectStore {
     return true
   }
 
-  /// Gives a project a name in Releases. Nil or an empty name goes back to the one read from the folder.
+  /// Gives a project a name in Releases Manager. Nil or an empty name goes back to the one read from the folder.
   /// Returns false when the folder isn't in the list.
   @discardableResult
   public func rename(_ path: String, to name: String?) throws -> Bool {

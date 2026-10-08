@@ -47,7 +47,7 @@ struct ContentView: View {
       AddProjectsSheet()
     }
     .alert(
-      "Releases",
+      "Releases Manager",
       isPresented: Binding(
         get: { model.errorMessage != nil },
         set: { if !$0 { model.errorMessage = nil } }
@@ -85,7 +85,7 @@ private struct EmptyStateView: View {
     ContentUnavailableView {
       Label("Drop a project folder here", systemImage: "shippingbox")
     } description: {
-      Text("Releases finds the GitHub repo and the version, and lists every release.\nAgents can add projects with `releases add <folder>`.")
+      Text("Releases Manager finds the GitHub repo and the version, and lists every release.\nAgents can add projects with `releases add <folder>`.")
     } actions: {
       Button("Add Projects…") {
         model.showsAddProjects = true

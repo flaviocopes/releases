@@ -9,7 +9,7 @@ import ReleasesCore
 import SwiftUI
 
 let output = URL(filePath: CommandLine.arguments[1])
-let title = "Releases"
+let title = "Releases Manager"
 let width: CGFloat = 1180
 let height: CGFloat = 760
 

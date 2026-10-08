@@ -103,9 +103,9 @@ enum CLIError: LocalizedError {
   var errorDescription: String? {
     switch self {
     case .missingProject(let command):
-      "Add a project name. Example: releases \(command) soundscape"
+      "Add a project name. Example: releases \(command) tranquillity-maker"
     case .missingFolder:
-      "Add a folder. Example: releases add ~/dev/soundscape"
+      "Add a folder. Example: releases add ~/dev/tranquillity-maker"
     case .unknownCommand(let command):
       "Unknown command '\(command)'. Run 'releases help' to see the commands."
     case .unknownOption(let option, let command):
@@ -123,7 +123,7 @@ enum CLIError: LocalizedError {
     case .couldNotOpen:
       "macOS couldn't open it."
     case .missingName:
-      "Add the new name, or --reset. Example: releases rename factorylog \"Factory Log\""
+      "Add the new name, or --reset. Example: releases rename work-tracebook \"Work Tracebook\""
     }
   }
 }

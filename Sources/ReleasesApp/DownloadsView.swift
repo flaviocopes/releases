@@ -68,9 +68,9 @@ struct DownloadsView: View {
   private func weekHelp(_ released: [ProjectSnapshot]) -> String {
     guard let since = released.downloadsTrackedSince,
           let known = Calendar.current.date(byAdding: .day, value: 7, to: since) else {
-      return "Releases saves the downloads every day, and knows the last 7 days after a week."
+      return "Releases Manager saves the downloads every day, and knows the last 7 days after a week."
     }
-    return "Releases started saving the downloads on \(since.formatted(.dateTime.month(.wide).day())), so it knows the last 7 days from \(known.formatted(.dateTime.month(.wide).day()))."
+    return "Releases Manager started saving the downloads on \(since.formatted(.dateTime.month(.wide).day())), so it knows the last 7 days from \(known.formatted(.dateTime.month(.wide).day()))."
   }
 
   private func chart(_ released: [ProjectSnapshot], series: [DownloadSeries], focused: String?) -> some View {
@@ -118,7 +118,7 @@ struct DownloadsView: View {
     }
     if series.total.contains(where: \.isEstimate) {
       let since = released.downloadsTrackedSince.map { ", since \($0.formatted(.dateTime.month(.wide).day()))" } ?? ""
-      sentences.append("GitHub only keeps the total so far, so Releases saves it every day\(since). The shaded days before that are an estimate, spread evenly from each launch.")
+      sentences.append("GitHub only keeps the total so far, so Releases Manager saves it every day\(since). The shaded days before that are an estimate, spread evenly from each launch.")
     }
     return sentences.joined(separator: " ")
   }

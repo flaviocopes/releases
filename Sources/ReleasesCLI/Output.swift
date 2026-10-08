@@ -139,7 +139,7 @@ enum Output {
     }
     columns(rows)
     if shown.contains(where: { days[$0].isEstimate }) {
-      hint("~ is an estimate. GitHub only keeps the total so far, so the days before Releases saved its first count are spread evenly from each launch.")
+      hint("~ is an estimate. GitHub only keeps the total so far, so the days before Releases Manager saved its first count are spread evenly from each launch.")
     }
     if total.count > shown.count {
       hint("Showing the last \(shown.count) of \(total.count) days. Use --json to see them all.")
@@ -296,7 +296,7 @@ struct TimelineJSON: Encodable {
 /// The JSON shape of `releases downloads`.
 struct DownloadsJSON: Encodable {
   var total: Int
-  /// Nil until Releases has a count from a week ago for every project.
+  /// Nil until Releases Manager has a count from a week ago for every project.
   var lastSevenDays: Int?
   var trackedSince: Date?
   var projects: [ProjectDownloadsJSON]
@@ -372,7 +372,7 @@ struct ProjectDownloadsJSON: Encodable {
 /// The JSON shape of a project, flat enough for agents and scripts.
 struct ProjectJSON: Encodable {
   var name: String
-  /// The name read from the folder, when the project has another name in Releases.
+  /// The name read from the folder, when the project has another name in Releases Manager.
   var detectedName: String?
   var path: String
   var isTracked: Bool

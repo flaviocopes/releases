@@ -7,11 +7,11 @@ struct ReleasesDesktopApp: App {
   @Environment(\.scenePhase) private var scenePhase
 
   init() {
-    AppUpdater.shared.start(repository: "flaviocopes/releases")
+    AppUpdater.shared.start(repository: "flaviocopes/releases-manager")
   }
 
   var body: some Scene {
-    WindowGroup("Releases") {
+    WindowGroup("Releases Manager") {
       ContentView()
         .environment(model)
         .frame(minWidth: 860, minHeight: 540)

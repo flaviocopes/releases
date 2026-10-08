@@ -7,7 +7,7 @@
 import AppKit
 import SwiftUI
 
-let name = "Releases"
+let name = "Releases Manager"
 let tagline = "Every release of your Mac apps,\nand what's waiting to ship."
 let chips = ["Latest releases", "Create Release", "A CLI for agents"]
 let size = CGSize(width: 1280, height: 560)
@@ -57,7 +57,7 @@ struct Banner: View {
           .frame(width: 132, height: 132)
           .shadow(color: .black.opacity(0.35), radius: 18, y: 10)
         Text(name)
-          .font(.system(size: 76, weight: .bold))
+          .font(.system(size: 52, weight: .bold))
           .tracking(-1.8)
           .foregroundStyle(.white)
           .padding(.top, 26)

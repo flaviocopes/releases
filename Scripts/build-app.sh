@@ -1,12 +1,12 @@
 #!/bin/sh
-# Builds a universal (Apple silicon and Intel) dist/Releases.app.
+# Builds a universal (Apple silicon and Intel) dist/Releases Manager.app.
 # Signs with Flavio's Developer ID when the certificate is in the keychain, ad-hoc everywhere else.
 # The version comes from Commands.version in Sources/ReleasesCLI/Commands.swift.
 
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
-APP="$ROOT/dist/Releases.app"
+APP="$ROOT/dist/Releases Manager.app"
 CONTENTS="$APP/Contents"
 MACOS="$CONTENTS/MacOS"
 RESOURCES="$CONTENTS/Resources"
@@ -19,7 +19,7 @@ swift build -c release --arch arm64 --arch x86_64 --product ReleasesApp
 
 rm -rf "$APP"
 mkdir -p "$MACOS" "$RESOURCES"
-cp ".build/apple/Products/Release/ReleasesApp" "$MACOS/Releases"
+cp ".build/apple/Products/Release/ReleasesApp" "$MACOS/Releases Manager"
 cp -R ".build/apple/Products/Release/Releases_ReleasesApp.bundle" "$RESOURCES/"
 
 ICON_KEY=""
@@ -44,16 +44,16 @@ cat > "$CONTENTS/Info.plist" <<PLIST
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>Releases</string>
+  <string>Releases Manager</string>
   <key>CFBundleExecutable</key>
-  <string>Releases</string>
+  <string>Releases Manager</string>
   <key>CFBundleIdentifier</key>
   <string>com.flaviocopes.releases</string>
   $ICON_KEY
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>Releases</string>
+  <string>Releases Manager</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
@@ -98,5 +98,5 @@ codesign --verify --deep --strict "$APP"
 
 # Registers the releases:// links, so 'releases open' works before the app is ever opened.
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP"
-echo "Built $APP $VERSION for $(lipo -archs "$MACOS/Releases"), $SIGNATURE signed"
+echo "Built $APP $VERSION for $(lipo -archs "$MACOS/Releases Manager"), $SIGNATURE signed"
 echo "$APP"

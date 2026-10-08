@@ -198,7 +198,7 @@ final class AppModel {
     Task { await add(urls) }
   }
 
-  /// The name lives in Releases only. Nil goes back to the one read from the folder.
+  /// The name lives in Releases Manager only. Nil goes back to the one read from the folder.
   func rename(_ snapshot: ProjectSnapshot, to name: String?) async {
     do {
       try await tracker.rename(snapshot.id, to: name)

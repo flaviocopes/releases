@@ -1,6 +1,6 @@
 import Foundation
 
-/// A GitHub repository, like `flaviocopes/soundscape`.
+/// A GitHub repository, like `flaviocopes/tranquillity-maker`.
 public struct GitHubRepository: Codable, Hashable, Sendable, CustomStringConvertible {
   public var owner: String
   public var name: String
@@ -102,7 +102,7 @@ public struct Release: Codable, Hashable, Sendable, Identifiable {
 public struct TrackedProject: Codable, Hashable, Sendable, Identifiable {
   public var path: String
   public var addedAt: Date
-  /// A name given in Releases, shown instead of the one read from the folder. It changes nothing in the project.
+  /// A name given in Releases Manager, shown instead of the one read from the folder. It changes nothing in the project.
   public var displayName: String?
   public var releases: [Release]?
   public var releasesFetchedAt: Date?

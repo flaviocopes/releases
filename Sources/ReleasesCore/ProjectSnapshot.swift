@@ -31,7 +31,7 @@ public struct ProjectSnapshot: Identifiable, Hashable, Sendable {
   }
 
   public var id: String { project.id }
-  /// The name given in Releases, or the one read from the folder.
+  /// The name given in Releases Manager, or the one read from the folder.
   public var name: String { project.displayName ?? local.name }
 
   /// The name to store for what someone typed: nil when it's empty or the folder's own name.

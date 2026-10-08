@@ -26,7 +26,7 @@ struct CapabilitiesManifest: Encodable {
     capabilities: [
       Capability(
         description: "Track a project folder and list its GitHub releases",
-        command: "releases add ~/dev/soundscape"
+        command: "releases add ~/dev/tranquillity-maker"
       ),
       Capability(
         description: "See which projects have commits or a newer version waiting to ship",
@@ -54,11 +54,11 @@ struct CapabilitiesManifest: Encodable {
       ),
       Capability(
         description: "Print the release prompt for a project, or open it in Codex",
-        command: "releases prompt soundscape --bump minor --codex"
+        command: "releases prompt tranquillity-maker --bump minor --codex"
       ),
       Capability(
-        description: "Show a project in Releases, open it in Codex with --codex, or open its Create Release sheet",
-        command: "releases open soundscape --release --bump minor"
+        description: "Show a project in Releases Manager, open it in Codex with --codex, or open its Create Release sheet",
+        command: "releases open tranquillity-maker --release --bump minor"
       ),
       Capability(
         description: "Learn every command and option as JSON for agents",
@@ -66,6 +66,7 @@ struct CapabilitiesManifest: Encodable {
       )
     ],
     changelog: [
+      Release(version: "1.6.0", date: "2026-10-08", changes: ["Renamed the app to Releases Manager. Existing commands and saved data still work."]),
       Release(
         version: "1.5.0",
         date: "2026-10-07",
@@ -85,7 +86,7 @@ struct CapabilitiesManifest: Encodable {
         version: "1.3.0",
         date: "2026-10-01",
         changes: [
-          "New releases rename to give a project another name in Releases.",
+          "New releases rename to give a project another name in Releases Manager.",
           "releases open --github-desktop opens the folder in GitHub Desktop."
         ]
       ),

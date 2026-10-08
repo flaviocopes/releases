@@ -5,12 +5,13 @@
 # bundle ID. The capture app points RELEASES_STORE at an empty file, so your
 # project list and the app's settings stay untouched.
 # Usage: ./Scripts/screenshot.sh
+# Set BUILD_ONLY=1 to build without launching, for capture in the test VM.
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 BUILD="$ROOT/.build/screenshot"
-APP="$BUILD/Releases Screenshot.app"
+APP="$BUILD/Releases Manager Screenshot.app"
 TARGET="$(uname -m)-apple-macos14.0"
 
 rm -rf "$BUILD"
@@ -34,7 +35,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleIdentifier</key>
   <string>com.flaviocopes.releases.screenshot</string>
   <key>CFBundleName</key>
-  <string>Releases</string>
+  <string>Releases Manager</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>NSHighResolutionCapable</key>
@@ -44,7 +45,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 
 codesign --force --sign - "$APP"
+if [ "${BUILD_ONLY:-}" = 1 ]; then
+  echo "$APP"
+  exit 0
+fi
 open -n "$APP" --args "$ROOT/docs" -AppleLocale en_US -AppleLanguages '(en)' -AppleShowScrollBars WhenScrolling
 sleep 1
-while pgrep -f "Releases Screenshot.app/Contents/MacOS" >/dev/null; do sleep 1; done
+while pgrep -f "Releases Manager Screenshot.app/Contents/MacOS" >/dev/null; do sleep 1; done
 ls -la docs/screenshot-*.png

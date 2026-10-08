@@ -53,7 +53,7 @@ public struct GitHubClient: Sendable {
     )
     request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
     request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
-    request.setValue("Releases", forHTTPHeaderField: "User-Agent")
+    request.setValue("Releases Manager", forHTTPHeaderField: "User-Agent")
     if let token {
       request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
     }

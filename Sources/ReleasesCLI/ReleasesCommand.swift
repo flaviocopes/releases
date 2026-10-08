@@ -220,7 +220,7 @@ struct ReleasesCommand {
     Output.downloads(released, weekAgo: weekAgo)
     reportFetchErrors(snapshots)
     if released.downloads(since: weekAgo) == nil, let since = released.downloadsTrackedSince {
-      Output.hint("Releases saves the downloads every day it fetches them, since \(Output.date(since)). The last 7 days fill in a week after that.")
+      Output.hint("Releases Manager saves the downloads every day it fetches them, since \(Output.date(since)). The last 7 days fill in a week after that.")
     } else {
       Output.hint("Run 'releases downloads <project>' to see each release.")
     }
@@ -445,7 +445,7 @@ struct ReleasesCommand {
     guard let identifier = options.positionals.first else {
       guard targets.isEmpty, !wantsRelease else { throw CLIError.missingProject(command: "open") }
       try AppLink.home.open()
-      try report(options, OpenJSON(opened: "app", project: nil, path: nil, url: AppLink.home.url), "Opened Releases.")
+      try report(options, OpenJSON(opened: "app", project: nil, path: nil, url: AppLink.home.url), "Opened Releases Manager.")
       return
     }
 

@@ -6,7 +6,7 @@ public enum AppLinkError: LocalizedError, Sendable {
   public var errorDescription: String? {
     switch self {
     case .appNotFound:
-      "The Releases app didn't open. Build it with ./Scripts/build-app.sh, which also registers its releases:// links."
+      "The Releases Manager app didn't open. Build it with ./Scripts/build-app.sh, which also registers its releases:// links."
     }
   }
 }
@@ -85,6 +85,7 @@ public enum AppLink: Hashable, Sendable {
 
   /// Whether the built app is running, so a link can reach it without launching it.
   public static var isAppRunning: Bool {
-    Shell.run("/usr/bin/pgrep", ["-x", "Releases"]).succeeded
+    Shell.run("/usr/bin/pgrep", ["-x", "Releases Manager"]).succeeded
+      || Shell.run("/usr/bin/pgrep", ["-x", "Releases"]).succeeded
   }
 }

@@ -1,28 +1,28 @@
-<img src="docs/banner.png" alt="Releases, every release of your Mac apps, and what's waiting to ship" />
+<img src="docs/banner.png" alt="Releases Manager, every release of your Mac apps, and what's waiting to ship" />
 
-Releases is a Mac app that keeps track of the apps you make: their versions, their GitHub releases, and what's waiting to ship. Open it and you see every release of every project, newest first, with what changed and how many people downloaded it.
+Releases Manager is a Mac app that keeps track of the apps you make: their versions, their GitHub releases, and what's waiting to ship. Open it and you see every release of every project, newest first, with what changed and how many people downloaded it.
 
-GitHub shows one repo at a time. When you build a lot of small apps, it's easy to lose track of which ones have changes waiting for a release. Releases puts all of them in one window, and **Create Release** opens the next release prompt in Codex.
+GitHub shows one repo at a time. When you build a lot of small apps, it's easy to lose track of which ones have changes waiting for a release. Releases Manager puts all of them in one window, and **Create Release** opens the next release prompt in Codex.
 
 It comes with a `releases` command that does everything the app does, so a coding agent can do it too.
 
-Read the announcement and watch the 30-second demo on my blog: [I built Releases, a Mac app that tracks every app I release](https://flaviocopes.com/releases/).
+Read the announcement and watch the 30-second demo on my blog: [I built Releases Manager, a Mac app that tracks every app I release](https://flaviocopes.com/releases-manager/).
 
-[![Watch the 30-second Releases demo](docs/showreel-poster.jpg)](https://flaviocopes.com/releases/)
+[![Watch the 30-second Releases Manager demo](docs/showreel-poster.jpg)](https://flaviocopes.com/releases-manager/)
 
 ## Download
 
-Get `Releases-1.5.0.zip` from the [latest release](https://github.com/flaviocopes/releases/releases/latest), unzip it, and drag Releases to your Applications folder. It runs on macOS 14 Sonoma or later, on Apple silicon and Intel Macs.
+Get `Releases-Manager-1.6.0.zip` from the [latest release](https://github.com/flaviocopes/releases-manager/releases/latest), unzip it, and drag Releases Manager to your Applications folder. It runs on macOS 14 Sonoma or later, on Apple silicon and Intel Macs.
 
 ### Opening it the first time
 
-Releases is signed with my Apple Developer ID and notarized by Apple. The first time you open it, macOS asks if you're sure you want to open an app downloaded from the internet. Click **Open**.
+Releases Manager is signed with my Apple Developer ID and notarized by Apple. The first time you open it, macOS asks if you're sure you want to open an app downloaded from the internet. Click **Open**.
 
-On a work laptop you might not be able to install apps in `/Applications`. You can keep Releases in the `Applications` folder inside your home folder instead.
+On a work laptop you might not be able to install apps in `/Applications`. You can keep Releases Manager in the `Applications` folder inside your home folder instead.
 
 ### Updates
 
-Once a day, Releases asks GitHub whether there's a newer version. When there is, it shows what's new, and **Install and Relaunch** puts it in place of the old one. **Releases → Check for Updates…** checks right away.
+Once a day, Releases Manager asks GitHub whether there's a newer version. When there is, it shows what's new, and **Install and Relaunch** puts it in place of the old one. **Releases Manager → Check for Updates…** checks right away.
 
 To turn off the daily check, run this in Terminal:
 
@@ -33,14 +33,14 @@ defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
 ## Features
 
 - **Latest Releases** puts every release of every project in one timeline, grouped by day, with what changed and how many times its files were downloaded from GitHub
-- **Downloads** shows the total, the last 7 days, and your top 5 apps, with a chart of the downloads of each day or the total so far, app by app. GitHub only keeps the total so far, so Releases saves it every day
+- **Downloads** shows the total, the last 7 days, and your top 5 apps, with a chart of the downloads of each day or the total so far, app by app. GitHub only keeps the total so far, so Releases Manager saves it every day
 - Each app's first release stands out in green. Switch to **First Releases** to see when you launched each app, today, yesterday, in the last 7 days, then month by month
 - What changed comes from the project's `CHANGELOG.md`, or from the "What's new" part of the release notes on GitHub
 - The **Waiting to Ship** tab lists the projects with commits since their last release, or with a version newer than the last release, the most commits first, with the commits waiting to go out. **Check with Agent** asks your coding agent which of them are worth a release
 - Each project shows its version and the file it comes from, its branch, the commits you haven't pushed or released, and every release with its downloads
 - **Create Release** suggests the next version, writes the prompt for your coding agent, and opens it in Codex. Nothing runs until you send it. **Create Releases** does it for every project waiting to ship
 - Add a project by dropping its folder on the window, or with `releases add`. **Add More…** lists the apps and command-line tools next to your projects that aren't in the list yet
-- The name and the icon come from the app you built, in `dist/` or `build/`. Double-click a project's name to give it another one, in Releases only
+- The name and the icon come from the app you built, in `dist/` or `build/`. Double-click a project's name to give it another one, in Releases Manager only
 - Open a project on GitHub, in Cursor, in GitHub Desktop or in the Finder from its page
 - The releases refresh every 10 minutes and when you switch to the app, and `⌘R` refreshes them right away
 - A `releases` command for your terminal and your agents, with JSON output
@@ -49,7 +49,7 @@ defaults write com.flaviocopes.releases AppUpdaterAutomaticChecks -bool false
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png" />
-  <img src="docs/screenshot-light.png" alt="The Releases window on Latest Releases, with the latest releases of five projects" />
+  <img src="docs/screenshot-light.png" alt="The Releases Manager window on Latest Releases, with the latest releases of five projects" />
 </picture>
 
 ## A project's page
@@ -61,7 +61,7 @@ Select a project to see where it stands. The badge says whether it's up to date,
   <img src="docs/screenshot-project-light.png" alt="The page of the Inkwell project, with its version, branch, downloads and four releases" />
 </picture>
 
-Releases reads the version from the first of these it finds:
+Releases Manager reads the version from the first of these it finds:
 
 1. `MARKETING_VERSION` in `project.yml`
 2. `version` in `package.json`
@@ -84,9 +84,9 @@ Not sure which ones deserve a release? Click **Check with Agent** instead. It op
 
 ## Adding projects
 
-Drop a project folder on the window, or click **Add More…** at the end of the sidebar. The + button in the toolbar and `⌘O` do the same. The Add Projects sheet lists the apps and command-line tools next to your projects that aren't in Releases yet. Each one says whether it's on GitHub, whether it has a release, and when you last worked on it. Click **Add**, or **Choose Folder…** for a project somewhere else.
+Drop a project folder on the window, or click **Add More…** at the end of the sidebar. The + button in the toolbar and `⌘O` do the same. The Add Projects sheet lists the apps and command-line tools next to your projects that aren't in Releases Manager yet. Each one says whether it's on GitHub, whether it has a release, and when you last worked on it. Click **Add**, or **Choose Folder…** for a project somewhere else.
 
-Releases looks right inside the folders that hold your projects. If you track `~/dev/inkwell`, it looks in `~/dev`. With nothing added yet, it looks in `~/dev`, `~/Developer`, `~/Projects` and `~/code`. It never looks in your home folder itself, since reading Desktop or Documents makes macOS ask for permission.
+Releases Manager looks right inside the folders that hold your projects. If you track `~/dev/inkwell`, it looks in `~/dev`. With nothing added yet, it looks in `~/dev`, `~/Developer`, `~/Projects` and `~/code`. It never looks in your home folder itself, since reading Desktop or Documents makes macOS ask for permission.
 
 A folder shows up when it has one of these:
 
@@ -95,7 +95,7 @@ A folder shows up when it has one of these:
 - a `package.json` with a `bin` command, or an Electron or Tauri dependency
 - a built `.app` in `dist/` or `build/`
 
-Clones of other people's repos stay out of the list. Releases knows your GitHub account from the projects you added, so a repo from another account doesn't show up. Neither does a second copy of a project you already track.
+Clones of other people's repos stay out of the list. Releases Manager knows your GitHub account from the projects you added, so a repo from another account doesn't show up. Neither does a second copy of a project you already track.
 
 Click the eye to hide a project you won't ship, or right-click it to open it in Cursor or the Finder. To bring back a hidden folder, run `releases unhide <folder>`.
 
@@ -121,7 +121,7 @@ Pass another folder to install it somewhere else, like `./Scripts/install-cli.sh
 | `releases unhide <folder>` | Brings a hidden project back |
 | `releases prompt <project>` | Prints the release prompt, or opens it in Codex with `--codex` (`--cursor` is a legacy alias). `--waiting` does it for every project waiting to ship, and `--check` asks one agent which of them need a release |
 | `releases open <project>` | Shows a project in the app, or opens it on GitHub, in Cursor, in GitHub Desktop or in the Finder |
-| `releases rename <project> <name>` | Gives a project another name in Releases, or `--reset` to go back |
+| `releases rename <project> <name>` | Gives a project another name in Releases Manager, or `--reset` to go back |
 | `releases refresh` | Fetches every release from GitHub now |
 | `releases remove <project>` | Takes projects off the list, and leaves their folders alone |
 | `releases capabilities` | What releases can do for agents, and what changed in each version. Add `--json` for the machine-readable manifest |
@@ -152,17 +152,17 @@ The sheet waits for you. Nothing gets released until you click **Continue in Cod
 
 ## GitHub access
 
-Releases asks the GitHub API for the releases of your projects. It signs the requests with the token in `GH_TOKEN` or `GITHUB_TOKEN`, or the one of the [GitHub CLI](https://cli.github.com) when you're logged in with `gh auth login`. With a token, private repos work too.
+Releases Manager asks the GitHub API for the releases of your projects. It signs the requests with the token in `GH_TOKEN` or `GITHUB_TOKEN`, or the one of the [GitHub CLI](https://cli.github.com) when you're logged in with `gh auth login`. With a token, private repos work too.
 
 Without a token it still works, for public repos only. GitHub allows 60 requests an hour that way, which is plenty for a handful of projects.
 
-The token stays in memory. Releases never saves it or prints it.
+The token stays in memory. Releases Manager never saves it or prints it.
 
 ## Privacy
 
-Releases reads your project folders and their git history on your Mac, and has no accounts or analytics.
+Releases Manager reads your project folders and their git history on your Mac, and has no accounts or analytics.
 
-It goes online to ask GitHub for the releases of your projects, every 10 minutes while it's open. For **Add Projects**, it also asks about the projects there that are on GitHub, at most once an hour or when you press `⌘R`. Once a day, it asks GitHub whether there's a newer version of Releases, and it downloads one only when you click **Install and Relaunch**.
+It goes online to ask GitHub for the releases of your projects, every 10 minutes while it's open. For **Add Projects**, it also asks about the projects there that are on GitHub, at most once an hour or when you press `⌘R`. Once a day, it asks GitHub whether there's a newer version of Releases Manager, and it downloads one only when you click **Install and Relaunch**.
 
 The list lives in `~/Library/Application Support/Releases/projects.json`, with the folders you added, the releases last fetched from GitHub, one download count a day for each project, and the folders you hid. `releases store-path` prints where it is. Set `RELEASES_STORE` to use another file.
 
@@ -174,12 +174,12 @@ Build the app and open it:
 
 ```sh
 ./Scripts/build-app.sh
-open dist/Releases.app
+open "dist/Releases Manager.app"
 ```
 
-The script builds a universal app in `dist/Releases.app` and registers its `releases://` links. It signs with my Developer ID when that certificate is in the keychain, and ad hoc everywhere else, so your copy is signed ad hoc. You can also run the development build with `swift run ReleasesApp`.
+The script builds a universal app in `dist/Releases Manager.app` and registers its `releases://` links. It signs with my Developer ID when that certificate is in the keychain, and ad hoc everywhere else, so your copy is signed ad hoc. You can also run the development build with `swift run ReleasesApp`.
 
-A copy you build yourself opens without a warning on your Mac. If you send it to another Mac, macOS says it "could not verify Releases is free of malware". Click **Done**, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
+A copy you build yourself opens without a warning on your Mac. If you send it to another Mac, macOS says it "could not verify Releases Manager is free of malware". Click **Done**, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
 
 To build the release zip, run:
 
@@ -187,7 +187,7 @@ To build the release zip, run:
 ./Scripts/build-release.sh
 ```
 
-It checks that the app has both architectures and that its signature survives the zip, notarizes the zip when the app is Developer ID signed, then writes `dist/Releases-1.5.0.zip`.
+It checks that the app has both architectures and that its signature survives the zip, notarizes the zip when the app is Developer ID signed, then writes `dist/Releases-Manager-1.6.0.zip`.
 
 ## Development
 
@@ -213,10 +213,10 @@ Working with an AI coding agent? Point it at [AGENTS.md](AGENTS.md). It has the 
 
 ## How it works
 
-The list only keeps the folders, plus the releases GitHub returned last time. Everything else comes from the folder each time Releases looks: the name and icon of the built app, the version, the GitHub repo from the `origin` remote, the branch, and the commits since the last release's tag. So a version bump or a new commit shows up as soon as you switch to the app.
+The list only keeps the folders, plus the releases GitHub returned last time. Everything else comes from the folder each time Releases Manager looks: the name and icon of the built app, the version, the GitHub repo from the `origin` remote, the branch, and the commits since the last release's tag. So a version bump or a new commit shows up as soon as you switch to the app.
 
 The app and the command share that file, and the app watches its folder. So a project an agent adds with `releases add` shows up in the window right away, while the `releases://` links go the other way, from the command to the window.
 
 ## License
 
-Releases is released under the [MIT license](LICENSE). It's provided as is, without warranty of any kind.
+Releases Manager is released under the [MIT license](LICENSE). It's provided as is, without warranty of any kind.

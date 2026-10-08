@@ -52,7 +52,7 @@ private struct FoundBanner: View {
       VStack(alignment: .leading, spacing: 2) {
         Text("Not in your list yet")
           .font(.headline)
-        Text("Releases found it in \(folder). Add it to keep an eye on its releases, or hide it if you won't ship it.")
+        Text("Releases Manager found it in \(folder). Add it to keep an eye on its releases, or hide it if you won't ship it.")
           .font(.callout)
           .foregroundStyle(.secondary)
           .fixedSize(horizontal: false, vertical: true)
@@ -198,7 +198,7 @@ private struct Header: View {
   }
 }
 
-/// The project's name. Double-click it to give the project another name, in Releases only.
+/// The project's name. Double-click it to give the project another name, in Releases Manager only.
 private struct ProjectName: View {
   @Environment(AppModel.self) private var model
   let snapshot: ProjectSnapshot
@@ -234,7 +234,7 @@ private struct ProjectName: View {
 
   private var help: String {
     guard canRename else { return "" }
-    guard snapshot.project.displayName != nil else { return "Double-click to rename it in Releases" }
+    guard snapshot.project.displayName != nil else { return "Double-click to rename it in Releases Manager" }
     return "Double-click to rename it. Clear the name to go back to \"\(snapshot.local.name)\"."
   }
 

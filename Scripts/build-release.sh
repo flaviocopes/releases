@@ -1,6 +1,6 @@
 #!/bin/sh
 # Builds the universal app, checks the signature survives zipping, and writes
-# dist/Releases-<version>.zip for a GitHub release. Notarizes when the app is
+# dist/Releases-Manager-<version>.zip for a GitHub release. Notarizes when the app is
 # Developer ID signed (needs a notarytool keychain profile named "notary").
 # Usage: ./Scripts/build-release.sh
 set -eu
@@ -8,8 +8,8 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 VERSION=$(sed -n 's/^ *static let version = "\(.*\)"$/\1/p' Sources/ReleasesCLI/Commands.swift)
-APP="$ROOT/dist/Releases.app"
-ZIP="$ROOT/dist/Releases-$VERSION.zip"
+APP="$ROOT/dist/Releases Manager.app"
+ZIP="$ROOT/dist/Releases-Manager-$VERSION.zip"
 CHECK=$(mktemp -d)
 
 cleanup() {
@@ -27,7 +27,7 @@ else
   SIGNATURE="ad-hoc"
 fi
 
-lipo "$APP/Contents/MacOS/Releases" -verify_arch arm64 x86_64
+lipo "$APP/Contents/MacOS/Releases Manager" -verify_arch arm64 x86_64
 codesign --verify --deep --strict "$APP"
 ditto -c -k --keepParent "$APP" "$ZIP"
 
@@ -47,7 +47,7 @@ if [ "$SIGNATURE" = "Developer ID" ]; then
 fi
 
 ditto -x -k "$ZIP" "$CHECK"
-codesign --verify --deep --strict "$CHECK/Releases.app"
+codesign --verify --deep --strict "$CHECK/Releases Manager.app"
 
 echo "Release zip signed with $SIGNATURE"
 echo "$ZIP"

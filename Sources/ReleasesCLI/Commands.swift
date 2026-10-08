@@ -1,7 +1,7 @@
 import Foundation
 
 enum Commands {
-  static let version = "1.5.0"
+  static let version = "1.6.0"
 
   static let json = Option(name: "--json", help: "Print JSON instead of text.")
   static let refresh = Option(name: "--refresh", help: "Fetch the releases from GitHub even if they were fetched recently.")
@@ -158,7 +158,7 @@ enum Commands {
     ),
     CommandSpec(
       name: "rename",
-      summary: "Give a project another name in Releases. The folder and the app stay as they are.",
+      summary: "Give a project another name in Releases Manager. The folder and the app stay as they are.",
       usage: "releases rename <project> <name> [--reset] [--json]",
       options: [
         Option(name: "--reset", help: "Go back to the name read from the folder."),
@@ -217,7 +217,7 @@ enum Commands {
       Every command accepts --help and --json.
 
       Get started:
-        releases add ~/dev/soundscape      Track a project.
+        releases add ~/dev/tranquillity-maker      Track a project.
         releases list                      See every project and its latest release.
         releases list --waiting            See the projects waiting to ship, the most commits first.
         releases prompt --check --codex   Have an agent check which of them need a release.
@@ -225,13 +225,13 @@ enum Commands {
         releases recent --first            See when each app launched.
         releases downloads                 See how many times each app was downloaded.
         releases discover                  See the apps on this Mac that aren't released yet.
-        releases show soundscape           See all the releases of one project.
-        releases prompt soundscape --bump minor --codex
+        releases show tranquillity-maker           See all the releases of one project.
+        releases prompt tranquillity-maker --bump minor --codex
 
       For agents:
         releases help --json               Every command and option, as JSON.
         releases capabilities --json       What releases can do, and what changed.
-        releases open soundscape --release --bump minor
+        releases open tranquillity-maker --release --bump minor
                                            Show the Create Release sheet in the app, for a human to review.
         Errors go to stderr and exit with 1. The app picks up every change to the list right away.
       """
