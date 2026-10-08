@@ -2,7 +2,7 @@
 // <folder>/screenshot-<light|dark>.png (Latest Releases) and
 // <folder>/screenshot-project-<light|dark>.png (one project).
 // Scripts/screenshot.sh compiles it with the app's views, in place of the @main file.
-// Every project is made up. The real project list is never read.
+// The app names are real. Release notes, counts and dates are made up. The real project list is never read.
 
 import AppKit
 import ReleasesCore
@@ -26,44 +26,63 @@ enum Demo {
   /// The pages to capture, by file name.
   static let pages: [(name: String, selection: SidebarItem)] = [
     ("screenshot", .home),
-    ("screenshot-project", .project("\(home)/dev/inkwell"))
+    ("screenshot-project", .project("\(home)/dev/note-repo"))
   ]
 
   static func prepare() async {
     try? FileManager.default.createDirectory(at: icons, withIntermediateDirectories: true)
     model.snapshots = [
-      project("Inkwell", folder: "inkwell", symbol: "pencil.line", colors: (0x5C9DFF, 0x2457D6), version: "2.1.0", releases: [
-        release("Inkwell", "2.1.0", hoursAgo: 1.4, downloads: 38, notes: ["**Tags.** Add #tags to any note and filter the sidebar by them.", "**Quick open.** ⌘P jumps to any note by its title.", "**Faster search.** Results show up while you type."]),
-        release("Inkwell", "2.0.0", hoursAgo: 96, downloads: 214, notes: ["**Folders.** Group notes in folders, and drag them around.", "**iCloud sync.** Your notes on every Mac you use.", "**A new editor.** Markdown that formats while you type."]),
-        release("Inkwell", "1.4.0", hoursAgo: 530, downloads: 167, notes: ["**Export to PDF.** With the same fonts as the app.", "**Word count.** In the status bar."]),
-        release("Inkwell", "1.3.2", hoursAgo: 800, downloads: 96, notes: ["**Paste stays put.** The cursor no longer jumps to the end after pasting."])
+      project("Note Repo", folder: "note-repo", symbol: "pencil.line", colors: (0x5C9DFF, 0x2457D6), version: "2.5.0", releases: [
+        release("Note Repo", "2.5.0", hoursAgo: 1.4, downloads: 38, notes: ["**Starred notes.** Keep the notes you want to return to in the sidebar.", "**Posts from X.** Save a post beside your own notes.", "**Search.** Find a note by its text."]),
+        release("Note Repo", "2.4.0", hoursAgo: 96, downloads: 214, notes: ["**The editor.** Write and format notes without leaving the app.", "**Daily notes.** Scroll back through the days where you wrote something."]),
+        release("Note Repo", "2.3.0", hoursAgo: 530, downloads: 167, notes: ["**Links.** Save a page to read later."]),
+        release("Note Repo", "2.2.0", hoursAgo: 800, downloads: 96, notes: ["**Small fixes.** A smoother editing session."])
       ]),
-      project("Driftwood", folder: "driftwood", symbol: "timer", colors: (0xFFAE5C, 0xE8590C), version: "1.3.0", releases: [
-        release("Driftwood", "1.3.0", hoursAgo: 4.2, downloads: 21, notes: ["**Menu bar timer.** The time left, always in sight.", "**Custom sounds.** Pick the chime at the end of a session."]),
-        release("Driftwood", "1.2.1", hoursAgo: 27, downloads: 64, notes: ["**Sleep-proof sessions.** A session keeps going when the Mac goes to sleep."]),
-        release("Driftwood", "1.0.0", hoursAgo: 1000, downloads: 181, notes: ["**Focus sessions** with a gentle chime at the end."])
+      project("Tranquillity Maker", folder: "tranquillity-maker", symbol: "waveform", colors: (0xFFAE5C, 0xE8590C), version: "1.5.0", releases: [
+        release("Tranquillity Maker", "1.5.0", hoursAgo: 4.2, downloads: 21, notes: ["**Your mix.** Layer background sounds and set each volume."]),
+        release("Tranquillity Maker", "1.4.0", hoursAgo: 27, downloads: 64, notes: ["**Your last mix.** Sound choices and volumes are remembered between launches."])
       ]),
-      project("Lumen", folder: "lumen", symbol: "camera.aperture", colors: (0xB79BFF, 0x6741D9), version: "1.0.0", releases: [
-        release("Lumen", "1.0.0", hoursAgo: 30, downloads: 112, notes: ["**Capture any window** with its shadow, or without.", "**Annotate** with arrows, boxes and text.", "**Copy or save** in one click."])
-      ], commits: ["Add a timer before the capture", "Remember the last folder", "Fix blurry arrows on external displays"]),
-      project("Portside", folder: "portside", symbol: "network", colors: (0x7C95FF, 0x364FC7), version: "1.1.0", releases: [
-        release("Portside", "1.0.2", hoursAgo: 75, downloads: 43, notes: ["**Docker ports.** Ports used by Docker show up once."]),
-        release("Portside", "1.0.0", hoursAgo: 260, downloads: 128, notes: ["**Every open port** on your Mac, with the app that opened it.", "**Kill a process** from the list."])
+      project("VM Peek", folder: "vm-peek", symbol: "desktopcomputer", colors: (0xB79BFF, 0x6741D9), version: "1.2.0", releases: [
+        release("VM Peek", "1.2.0", hoursAgo: 30, downloads: 112, notes: ["**The test VM.** See its screen and the agents using it."])
+      ], commits: ["Keep the activity list beside the live screen", "Remember the window size"]),
+      project("Work Tracebook", folder: "work-tracebook", symbol: "list.bullet.clipboard", colors: (0x7C95FF, 0x364FC7), version: "1.3.0", releases: [
+        release("Work Tracebook", "1.3.0", hoursAgo: 75, downloads: 43, notes: ["**Work logs.** Follow tasks from the first report to completion."])
       ]),
-      project("Stash", folder: "stash", symbol: "doc.on.clipboard", colors: (0xFF8FB8, 0xC2255C), version: "3.2.0", releases: [
-        release("Stash", "3.2.0", hoursAgo: 340, downloads: 390, notes: ["**Pinned items** stay at the top of your clipboard history."])
+      project("Skill Cabinet", folder: "skill-cabinet", symbol: "square.stack.3d.up", colors: (0xFF8FB8, 0xC2255C), version: "1.5.0", releases: [
+        release("Skill Cabinet", "1.5.0", hoursAgo: 90, downloads: 390, notes: ["**Skills.** Browse the instructions your agents can use."])
+      ]),
+      project("Chip Pops", folder: "chip-pops", symbol: "speaker.wave.2", colors: (0x74C0FC, 0x1971C2), version: "1.2.0", releases: [
+        release("Chip Pops", "1.2.0", hoursAgo: 110, downloads: 72, notes: ["**Sound effects.** Find a click, a chime or a game sound."])
+      ]),
+      project("Footage Ferry", folder: "footage-ferry", symbol: "camera", colors: (0x8CE99A, 0x2B8A3E), version: "1.3.0", releases: [
+        release("Footage Ferry", "1.3.0", hoursAgo: 135, downloads: 29, notes: ["**Camera clips.** Bring footage from your phone to the Mac."])
+      ]),
+      project("Releases Manager", folder: "releases-manager", symbol: "shippingbox", colors: (0xFFD43B, 0xE67700), version: "1.6.0", releases: [
+        release("Releases Manager", "1.6.0", hoursAgo: 160, downloads: 86, notes: ["**App releases.** See published versions and the commits waiting for the next one."])
+      ]),
+      project("CLI Tools Cabinet", folder: "cli-tools-cabinet", symbol: "terminal", colors: (0xFF8787, 0xC92A2A), version: "1.5.0", releases: [
+        release("CLI Tools Cabinet", "1.5.0", hoursAgo: 180, downloads: 120, notes: ["**Your commands.** Find installed tools and ask what they can do."])
+      ]),
+      project("Number Pantry", folder: "number-pantry", symbol: "number", colors: (0x909AA5, 0x343A40), version: "1.2.0", releases: [
+        release("Number Pantry", "1.2.0", hoursAgo: 205, downloads: 64, notes: ["**Calculators.** Find a formula, enter the values and keep the result."])
+      ]),
+      project("Architecture Dissector", folder: "architecture-dissector", symbol: "point.3.connected.trianglepath.dotted", colors: (0x5C9DFF, 0x2457D6), version: "1.2.0", releases: [
+        release("Architecture Dissector", "1.2.0", hoursAgo: 230, downloads: 42, notes: ["**App maps.** Follow the components, stored data and workflows."])
+      ]),
+      project("Post Slide Deck", folder: "post-slide-deck", symbol: "rectangle.on.rectangle", colors: (0xB79BFF, 0x6741D9), version: "1.2.0", releases: [
+        release("Post Slide Deck", "1.2.0", hoursAgo: 255, downloads: 91, notes: ["**Slides.** Present posts from X, text and images."])
+      ]),
+      project("Broadcast Keep", folder: "broadcast-keep", symbol: "record.circle", colors: (0xFFAE5C, 0xE8590C), version: "1.1.0", releases: [
+        release("Broadcast Keep", "1.1.0", hoursAgo: 280, downloads: 37, notes: ["**Recordings.** Keep a livestream to watch later."])
       ])
     ].sortedByRelease()
 
     model.found = [
-      found("Weather Bar", folder: "weather-bar", symbol: "cloud.sun.fill", colors: (0x74C0FC, 0x1971C2), hoursAgo: 2, onGitHub: false),
-      found("Habit Grid", folder: "habit-grid", symbol: "square.grid.3x3.fill", colors: (0x8CE99A, 0x2B8A3E), hoursAgo: 26, onGitHub: true),
-      found("Snippets", folder: "snippets", symbol: "curlybraces", colors: (0x909AA5, 0x343A40), hoursAgo: 100, onGitHub: false),
-      found("Pixel Pad", folder: "pixel-pad", symbol: "paintbrush.pointed.fill", colors: (0xFFD43B, 0xE67700), hoursAgo: 230, onGitHub: true),
-      found("Menu Clock", folder: "menu-clock", symbol: "clock.fill", colors: (0xFF8787, 0xC92A2A), hoursAgo: 400, onGitHub: false)
-    ] + ["dotfiles-sync", "tiny-server", "markdown-preview", "color-picker", "rename-photos", "json-viewer", "dock-spacer"].enumerated().map { index, folder in
-      found(folder, folder: folder, symbol: "hammer.fill", colors: (0xADB5BD, 0x495057), hoursAgo: 600 + Double(index) * 200, onGitHub: false)
-    }
+      found("Tab Reunion", folder: "tab-reunion", symbol: "rectangle.3.group", colors: (0x74C0FC, 0x1971C2), hoursAgo: 2, onGitHub: true),
+      found("Slide Lookout", folder: "slide-lookout", symbol: "rectangle.inset.filled", colors: (0x8CE99A, 0x2B8A3E), hoursAgo: 26, onGitHub: true),
+      found("Repo Foyer", folder: "repo-foyer", symbol: "folder", colors: (0x909AA5, 0x343A40), hoursAgo: 100, onGitHub: true),
+      found("Couch Snake", folder: "couch-snake", symbol: "gamecontroller", colors: (0xFFD43B, 0xE67700), hoursAgo: 230, onGitHub: true)
+    ]
     model.lastRefresh = .now.addingTimeInterval(-120)
     try? await Task.sleep(for: .seconds(1))
   }
@@ -114,7 +133,9 @@ enum Demo {
   }
 
   static func release(_ name: String, _ version: String, hoursAgo: Double, downloads: Int, notes: [String]) -> Release {
-    let base = "https://github.com/orchard-apps/\(name.lowercased())/releases"
+    let slug = name.lowercased().replacingOccurrences(of: " ", with: "-")
+    let asset = "\(slug)-\(version).zip"
+    let base = "https://github.com/orchard-apps/\(slug)/releases"
     return Release(
       tag: "v\(version)",
       title: "\(name) \(version)",
@@ -122,10 +143,10 @@ enum Demo {
       url: URL(string: "\(base)/tag/v\(version)")!,
       notes: "## What's new\n\n" + notes.map { "- \($0)" }.joined(separator: "\n"),
       assets: [ReleaseAsset(
-        name: "\(name)-\(version).zip",
+        name: asset,
         size: 3_400_000 + downloads * 1_000,
         downloadCount: downloads,
-        downloadURL: URL(string: "\(base)/download/v\(version)/\(name)-\(version).zip")!
+        downloadURL: URL(string: "\(base)/download/v\(version)/\(asset)")!
       )]
     )
   }
